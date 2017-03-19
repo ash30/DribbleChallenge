@@ -9,33 +9,127 @@
 import Foundation
 import UIKit
 
+// MARK: APPEARANCE TRAITS
 
 protocol CircularView: class {
-    var layer:CALayer { get }
 }
 extension CircularView {
     
     func setLayer(_ layer:CALayer){
         layer.cornerRadius = layer.frame.width / 2.0
         layer.masksToBounds = true
+        layer.backgroundColor = UIColor.red.cgColor
     }
+    
+}
+
+
+enum GradientDirection {
+    
+    case horizontal
+    case vertical
+    case diagonal
+    case unknown
+    
 }
 
 protocol GradientView: class {
-    var layer:CALayer { get }
+    
+    var gradientLayer:CAGradientLayer! { get set }
+    var startColor: UIColor? { get set }
+    var endColor: UIColor? { get set }
+    var direction: GradientDirection { get set }
+    
 }
 extension GradientView {
     
-    func setLayer(_ layer:CALayer){
-        let gradient = CAGradientLayer()
-        gradient.frame = layer.frame
-        gradient.colors = [UIColor.red.cgColor, UIColor.black.cgColor]
-        layer.addSublayer(gradient)
+    var startColor: UIColor? {
+        get {
+            guard
+                let c = gradientLayer.colors?.first else
+            {
+                return nil
+            }
+            let color = c as! CGColor
+            return UIColor.init(cgColor: color)
+        }
+        set(color){
+            gradientLayer.colors?[0] = color?.cgColor
+        }
     }
+    
+    var endColor: UIColor? {
+        get {
+            guard
+                let c = gradientLayer.colors?.last else
+            {
+                return nil
+            }
+            let color = c as! CGColor
+            return UIColor.init(cgColor: color)
+        }
+        set(color){
+            gradientLayer.colors?[1] = color?.cgColor
+        }
+    }
+    
+    var direction: GradientDirection {
+        get {
+            switch gradientLayer.endPoint {
+            case CGPoint(x: 0, y: 1):
+                return GradientDirection.vertical
+            case CGPoint(x: 1, y: 0):
+                return GradientDirection.horizontal
+            case CGPoint(x: 1, y: 1):
+                return GradientDirection.diagonal
+            default:
+                return GradientDirection.unknown
+            }
+        }
+        set(direction) {
+            switch direction {
+            case .horizontal:
+                gradientLayer.endPoint = CGPoint(x: 1, y: 0)
+            case .vertical:
+                gradientLayer.endPoint = CGPoint(x: 0, y: 1)
+            case .diagonal:
+                gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+            case .unknown:
+                break
+            }
+        }
+    }
+    
+    func setLayer(_ layer:CALayer){
+        gradientLayer = CAGradientLayer()
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+        gradientLayer.bounds = layer.bounds
+        gradientLayer.colors = [UIColor.red.cgColor, UIColor.red.cgColor]
+        layer.addSublayer(gradientLayer)
+    }
+    
 }
 
 
-class gradientView: UIView, GradientView, CircularView {
+protocol Resizeable: class {
+}
+extension Resizeable {
+    
+    func resize(layer:CALayer){
+        for child in layer.sublayers ?? [] {
+            child.frame = layer.bounds
+            resize(layer: child)
+        }
+    }
+    
+}
+
+// MARK: GRADIENT VIEW
+
+class gradientView: UIView, CircularView, GradientView, Resizeable {
+    
+    var gradientLayer:CAGradientLayer!
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -48,49 +142,74 @@ class gradientView: UIView, GradientView, CircularView {
     }
     override func layoutSubviews() {
         super.layoutSubviews()
+        resize(layer: layer)
+        (self as CircularView).setLayer(layer)
     }
     
     func createSubviews(){
+        layoutMargins = UIEdgeInsets.zero
         (self as GradientView).setLayer(layer)
         (self as CircularView).setLayer(layer)
-        
     }
 }
 
-fileprivate class DialCell: UICollectionViewCell {
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        _createSubviews()
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-        _createSubviews()
-    }
-    
-    func _createSubviews(){
-        contentView.addSubview( gradientView())
-    }
-}
-
-
+// MARK: DIALER VIEW
 
 class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
     
-    private static let internalResuseIdent = UUID().uuidString
+    // MARK: CLASS VARS
     
-    var rowCount: Int  = 3
+    fileprivate static let internalResuseIdent = UUID().uuidString
     
-    var collectionView: UICollectionView!
-    var dataSource: UICollectionViewDataSource? {
-        get {
-            return collectionView.dataSource
+    fileprivate class internalViewCell: UICollectionViewCell {
+        
+        var gradient: GradientView!
+        
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            _createSubviews()
         }
-        set(dataSource) {
-            collectionView.dataSource = dataSource
+        
+        required init?(coder aDecoder: NSCoder) {
+            super.init(coder: aDecoder)
+            _createSubviews()
+        }
+        
+        func _createSubviews(){
+            let v = gradientView()
+            v.translatesAutoresizingMaskIntoConstraints = false
+            let constraints = [
+                v.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+                v.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+                v.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+                v.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
+                ]
+            contentView.addSubview(v)
+            NSLayoutConstraint.activate(constraints)
+            gradient = v
         }
     }
+    
+    
+    // MARK: CHILD COLLECTION VIEW
+    
+    var collectionView: UICollectionView! {
+        didSet{
+            collectionView.register(
+                internalViewCell.self, forCellWithReuseIdentifier: UIDialerView.internalResuseIdent
+            )
+        }
+    }
+    
+    // MARK: CONFIGs
+    
+    var numItems = 12
+    var rowCount: Int  = 3
+    
+    var gradientDirection: GradientDirection = .vertical
+    var startColor: CGColor = UIColor.cyan.cgColor
+    var endColor: CGColor = UIColor.yellow.cgColor
+
     
     // MARK: INIT
     
@@ -110,15 +229,16 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
         layout.minimumLineSpacing = 0.0
         layout.minimumInteritemSpacing = 0.0
         layout.sectionInset = UIEdgeInsets.zero
-        layout.scrollDirection = .horizontal
+        layout.scrollDirection = .vertical
         
         collectionView = UICollectionView.init(frame: CGRect.init(x: 0, y: 0, width: 100, height: 100), collectionViewLayout: layout)
         
-        //collectionView.layoutMargins = UIEdgeInsets.zero
+        collectionView.layoutMargins = UIEdgeInsets.zero
         //collectionView.backgroundColor = UIColor.black
         
         addSubview(collectionView)
         collectionView.delegate = self
+        collectionView.dataSource = self 
         layoutMargins =  UIEdgeInsets.zero
         
         // LAYOUT
@@ -141,10 +261,82 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
         
         let parentViewSize = collectionView.frame
-        let cellSize = min(parentViewSize.width, parentViewSize.height) / CGFloat(rowCount)
+        let cellSize = (min(parentViewSize.width, parentViewSize.height) / CGFloat(rowCount)) - 1
         return CGSize(width: cellSize, height: cellSize)
         
     }
     
+}
+
+extension UIDialerView: UICollectionViewDataSource {
     
+    func cellCoordinates(index:Int) -> (Int,Int) {
+        return (x: index % rowCount, y: index / rowCount)
+    }
+    
+    func normalisedCellCoordinates(x:Int, y:Int) -> (CGFloat,CGFloat){
+        let scale = CGFloat(numItems / rowCount )
+        return (x: CGFloat(x) / scale, y: CGFloat(y) / scale)
+    }
+    
+    func cellGradientCoordinates(index: Int, direction: GradientDirection) -> (CGFloat, CGFloat){
+        
+        let start_coords = cellCoordinates(index: index)
+        let end_coords = (start_coords.0 + 1 , start_coords.1 + 1)
+        let norm_start_coords = normalisedCellCoordinates(x: start_coords.0, y: start_coords.1)
+        let norm_end_coords = normalisedCellCoordinates(x: end_coords.0, y: end_coords.1)
+
+        switch direction {
+        case .vertical:
+            return (norm_start_coords.1,norm_end_coords.1)
+            
+        case .horizontal:
+            return (norm_start_coords.0,norm_end_coords.0)
+
+        default:
+            // WIP
+            return (norm_start_coords.1,norm_end_coords.1)
+        }
+        
+    }
+    
+    fileprivate func setCellLocalGradient(indexPath:IndexPath, cell: internalViewCell){
+        guard let start = startColor.components, let end = endColor.components else {
+            return
+        }
+        
+        let startVec = (start.count == 4 ? start : Array.init(repeating: start.first, count: 3)).flatMap{$0}
+        let endVec = (end.count == 4 ? end : Array.init(repeating: end.first, count: 3)).flatMap{$0}
+        
+        guard startVec.count > 2, endVec.count > 2 else {
+            return // badly defined colors
+        }
+        
+        let mults = cellGradientCoordinates(index: indexPath.item, direction: gradientDirection)
+        let vec = zip(endVec, startVec).map { $0 - $1 }
+        
+        let localStartColor = zip(startVec, vec.map{$0 * mults.0}).map { $0 + $1 }
+        let localEndColor = zip(startVec, vec.map{$0 * mults.1}).map { $0 + $1 }
+        
+        cell.gradient.startColor = UIColor(red: localStartColor[0], green: localStartColor[1], blue: localStartColor[2], alpha: 1.0)
+        cell.gradient.endColor = UIColor(red: localEndColor[0], green: localEndColor[1], blue: localEndColor[2], alpha: 1.0)
+        cell.gradient.direction = gradientDirection
+        
+    }
+    
+    // MARK: DATA SOURCE
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return numItems
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
+        let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: UIDialerView.internalResuseIdent, for: indexPath) as! internalViewCell
+        
+        setCellLocalGradient(indexPath: indexPath, cell: cell)
+        return cell
+        
+    }
 }

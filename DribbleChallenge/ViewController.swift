@@ -8,20 +8,35 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController{
+    
+    var dialer: UIDialerView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.addSubview(gradientView(frame: CGRect.init(x: 0, y: 0, width: 100, height: 100)))
+//        view.addSubview(gradientView(frame: CGRect.init(x: 0, y: 0, width: 100, height: 100)))
+//        view.addSubview(gradientView(frame: CGRect.init(x: 100, y: 100, width: 100, height: 100)))
     
+        dialer = UIDialerView()
+        dialer.translatesAutoresizingMaskIntoConstraints = false
+        let constraints = [
+            dialer.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
+            dialer.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
+            dialer.leftAnchor.constraint(equalTo: view.layoutMarginsGuide.leftAnchor),
+            dialer.rightAnchor.constraint(equalTo: view.layoutMarginsGuide.rightAnchor)
+
+
+        ]
+        view.addSubview(dialer)
+        NSLayoutConstraint.activate(constraints)
+
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
 
 }
 
