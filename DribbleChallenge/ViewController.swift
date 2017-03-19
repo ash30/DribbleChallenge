@@ -11,12 +11,12 @@ import UIKit
 class ViewController: UIViewController{
     
     var dialer: UIDialerView!
+    var backgroundColor = UIColor(colorLiteralRed: 0.14117, green: 0.09019, blue: 0.35294, alpha: 1)
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-//        view.addSubview(gradientView(frame: CGRect.init(x: 0, y: 0, width: 100, height: 100)))
-//        view.addSubview(gradientView(frame: CGRect.init(x: 100, y: 100, width: 100, height: 100)))
+        view.backgroundColor = backgroundColor
     
         dialer = UIDialerView()
         dialer.translatesAutoresizingMaskIntoConstraints = false
