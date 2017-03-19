@@ -164,6 +164,7 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
     fileprivate class internalViewCell: UICollectionViewCell {
         
         var gradient: GradientView!
+        var label: UILabel!
         
         override init(frame: CGRect) {
             super.init(frame: frame)
@@ -176,17 +177,34 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
         }
         
         func _createSubviews(){
-            let v = gradientView()
-            v.translatesAutoresizingMaskIntoConstraints = false
-            let constraints = [
-                v.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-                v.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-                v.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-                v.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
+            
+            gradient = { () -> GradientView in
+                let v = gradientView()
+                v.translatesAutoresizingMaskIntoConstraints = false
+                let constraints = [
+                    v.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+                    v.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+                    v.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+                    v.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
+                    ]
+                contentView.addSubview(v)
+                NSLayoutConstraint.activate(constraints)
+                return v
+            }()
+            
+            label = { () -> UILabel in
+                let v = UILabel()
+                v.text = "9"
+                v.translatesAutoresizingMaskIntoConstraints = false
+                let constraints = [
+                    v.centerXAnchor.constraint(equalTo: self.contentView.layoutMarginsGuide.centerXAnchor),
+                    v.centerYAnchor.constraint(equalTo: self.contentView.layoutMarginsGuide.centerYAnchor),
                 ]
-            contentView.addSubview(v)
-            NSLayoutConstraint.activate(constraints)
-            gradient = v
+                self.contentView.addSubview(v)
+                NSLayoutConstraint.activate(constraints)
+                return v
+            }()
+            
         }
     }
     
@@ -207,8 +225,8 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
     var rowCount: Int  = 3
     
     var gradientDirection: GradientDirection = .vertical
-    var startColor: CGColor = UIColor.cyan.cgColor
-    var endColor: CGColor = UIColor.yellow.cgColor
+    var startColor: CGColor = UIColor(colorLiteralRed: 0.1372, green: 0.3254, blue: 0.63921, alpha: 1.0).cgColor
+    var endColor: CGColor = UIColor(colorLiteralRed: 0.6470, green: 0.1607, blue: 0.3803, alpha: 1.0).cgColor
 
     
     // MARK: INIT
@@ -234,7 +252,7 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
         collectionView = UICollectionView.init(frame: CGRect.init(x: 0, y: 0, width: 100, height: 100), collectionViewLayout: layout)
         
         collectionView.layoutMargins = UIEdgeInsets.zero
-        //collectionView.backgroundColor = UIColor.black
+        collectionView.backgroundColor = nil
         
         addSubview(collectionView)
         collectionView.delegate = self
