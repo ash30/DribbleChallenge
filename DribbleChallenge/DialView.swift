@@ -127,7 +127,7 @@ extension Resizeable {
 
 // MARK: GRADIENT VIEW
 
-class gradientView: UIView, CircularView, GradientView, Resizeable {
+class gradientView: UIButton, CircularView, GradientView, Resizeable {
     
     var gradientLayer:CAGradientLayer!
     
@@ -224,6 +224,8 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
     var numItems = 12
     var rowCount: Int  = 3
     
+    var textSize: Int = 12
+    
     var gradientDirection: GradientDirection = .vertical
     var startColor: CGColor = UIColor(colorLiteralRed: 0.1372, green: 0.3254, blue: 0.63921, alpha: 1.0).cgColor
     var endColor: CGColor = UIColor(colorLiteralRed: 0.6470, green: 0.1607, blue: 0.3803, alpha: 1.0).cgColor
@@ -270,6 +272,11 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
             ]
         NSLayoutConstraint.activate(constraints)
         
+    }
+    
+    override var intrinsicContentSize: CGSize {
+        let spacing = textSize * 2 
+        return CGSize(width: (textSize + spacing) * rowCount, height: (numItems / rowCount) * (textSize + spacing) )
     }
     
     // MARK: FLOW LAYOUT DELEGATE

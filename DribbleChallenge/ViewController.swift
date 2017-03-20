@@ -10,7 +10,11 @@ import UIKit
 
 class ViewController: UIViewController{
     
-    var dialer: UIDialerView!
+    var container: UIStackView!
+    var keypad: UIDialerView!
+    var pin: UIDialerView!
+    var label: UILabel!
+    
     var backgroundColor = UIColor(colorLiteralRed: 0.14117, green: 0.09019, blue: 0.35294, alpha: 1)
 
     override func viewDidLoad() {
@@ -18,18 +22,61 @@ class ViewController: UIViewController{
 
         view.backgroundColor = backgroundColor
     
-        dialer = UIDialerView()
-        dialer.translatesAutoresizingMaskIntoConstraints = false
-        let constraints = [
-            dialer.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
-            dialer.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
-            dialer.leftAnchor.constraint(equalTo: view.layoutMarginsGuide.leftAnchor),
-            dialer.rightAnchor.constraint(equalTo: view.layoutMarginsGuide.rightAnchor)
+        container = {
+            let v = UIStackView()
+            v.translatesAutoresizingMaskIntoConstraints = false
+            let constraints = [
+                v.topAnchor.constraint(equalTo: self.view.layoutMarginsGuide.topAnchor, constant: 64.0),
+                v.bottomAnchor.constraint(equalTo: self.view.layoutMarginsGuide.bottomAnchor, constant: -64.0),
+                v.leftAnchor.constraint(equalTo: self.view.layoutMarginsGuide.leftAnchor),
+                v.rightAnchor.constraint(equalTo: self.view.layoutMarginsGuide.rightAnchor)
+            ]
+            self.view.addSubview(v)
+            NSLayoutConstraint.activate(constraints)
+            
+            // NEED TO WORK OUT SIZE if we want to cleverly 
+            v.distribution = .fillProportionally
+            v.alignment = .fill
+            v.axis = .vertical
+            return v
+        }()
+        
 
+        
+        label = {
+            let v = UILabel()
+            v.text  = "TouchID or Enter PIN"
+            v.textAlignment = .center
+            v.textColor = UIColor.white
 
-        ]
-        view.addSubview(dialer)
-        NSLayoutConstraint.activate(constraints)
+            container.addArrangedSubview(v)
+            return v
+        }()
+        
+        pin = { () -> UIDialerView in
+            let v = UIDialerView()
+            let subContainer = UIStackView()
+            subContainer.addArrangedSubview(v)
+            subContainer.alignment = .center
+            subContainer.distribution = .fill
+            subContainer.axis = .vertical
+
+            
+            v.rowCount = 4
+            v.numItems = 4
+            v.textSize = 5
+            v.gradientDirection = .horizontal
+            v.translatesAutoresizingMaskIntoConstraints = false
+            container.addArrangedSubview(subContainer)
+            return v
+        }()
+        
+        keypad = { () -> UIDialerView in
+            let v = UIDialerView()
+            v.translatesAutoresizingMaskIntoConstraints = false
+            container.addArrangedSubview(v)
+            return v
+        }()
 
     }
 
