@@ -164,7 +164,6 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
     fileprivate class internalViewCell: UICollectionViewCell {
         
         var gradient: UIGradientView!
-        var label: UILabel!
         
         var padding: CGFloat {
             get{
@@ -213,20 +212,14 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
                 NSLayoutConstraint.activate(constraints)
                 return v
             }()
+
             
-            label = { () -> UILabel in
-                let v = UILabel()
-                v.text = "9"
-                v.translatesAutoresizingMaskIntoConstraints = false
-                let constraints = [
-                    v.centerXAnchor.constraint(equalTo: self.contentView.layoutMarginsGuide.centerXAnchor),
-                    v.centerYAnchor.constraint(equalTo: self.contentView.layoutMarginsGuide.centerYAnchor),
-                ]
-                self.contentView.addSubview(v)
-                NSLayoutConstraint.activate(constraints)
-                return v
-            }()
-            
+        }
+    }
+    // MARK: DELEGATE 
+    var dataSource: UIDialerViewDataSource? {
+        didSet {
+            collectionView.reloadData()
         }
     }
     
@@ -243,7 +236,11 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
     
     // MARK: CONFIGs
     
-    var numItems = 12
+    var numItems = 12 {
+        didSet{
+            collectionView.reloadData()
+        }
+    }
     var rowCount: Int  = 3
     
     var textSize: Int = 12
@@ -375,7 +372,7 @@ extension UIDialerView: UICollectionViewDataSource {
     // MARK: DATA SOURCE
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return numItems
+        return dataSource?.dialViewItemCount ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -385,9 +382,25 @@ extension UIDialerView: UICollectionViewDataSource {
         
         // Setup Cell
         setCellLocalGradient(indexPath: indexPath, cell: cell)
+        cell.gradient.titleLabel?.textAlignment = .center
         cell.padding = padding
+
+        dataSource?.dialView(cell.gradient, index: indexPath.item)
         
         return cell
         
+        
     }
 }
+
+// DELEGATE PROTOCOL
+
+protocol UIDialerViewDataSource{
+    
+    var dialViewItemCount: Int { get }
+    func dialView(_ button: UIButton, index: Int)
+    
+}
+
+
+

@@ -8,10 +8,14 @@
 
 import UIKit
 
-class ViewController: UIViewController{
+class ViewController: UIViewController {
     
     var container: UIStackView!
-    var keypad: UIDialerView!
+    var keypad: UIDialerView! {
+        didSet {
+            keypad.dataSource = self
+        }
+    }
     var pin: UIDialerView!
     var label: UILabel!
     
@@ -86,4 +90,28 @@ class ViewController: UIViewController{
     }
 
 }
+
+extension ViewController: UIDialerViewDataSource {
+    
+    var dialViewItemCount: Int {
+        return 12
+    }
+    func dialView(_ button: UIButton, index: Int) {
+        
+        // Override numbering 
+        
+        switch index {
+        case 9:
+            button.setImage(UIImage.init(named: "ic_fingerprint")! , for: .normal)
+        case 10:
+            button.setTitle("0", for: .normal)
+        case 11:
+            button.setTitle("C", for: .normal)
+        default:
+            button.setTitle("\(index+1)", for: .normal)
+
+        }
+    }
+}
+
 
