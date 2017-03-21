@@ -127,7 +127,7 @@ extension Resizeable {
 
 // MARK: GRADIENT VIEW
 
-class gradientView: UIButton, CircularView, GradientView, Resizeable {
+class UIGradientView: UIButton, CircularView, GradientView, Resizeable {
     
     var gradientLayer:CAGradientLayer!
     
@@ -163,9 +163,27 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
     
     fileprivate class internalViewCell: UICollectionViewCell {
         
-        var gradient: GradientView!
+        var gradient: UIGradientView!
         var label: UILabel!
         
+        var padding: CGFloat {
+            get{
+                return gradient.constraints.first?.multiplier ?? 1.0
+            }
+            set(mult) {
+                _ = contentView.constraints.filter {
+                    if let s = $0.identifier, s == "pad_constraint" {
+                        return true
+                    }
+                    return false
+                }.map {
+                    let newConstraint = gradient.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: mult)
+                    NSLayoutConstraint.deactivate([$0])
+                    NSLayoutConstraint.activate([newConstraint])
+                }
+            }
+        }
+
         override init(frame: CGRect) {
             super.init(frame: frame)
             _createSubviews()
@@ -176,17 +194,21 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
             _createSubviews()
         }
         
+        // This will be called right after init and so there will be no
+        // time for parent collection to edit the value....
+        
         func _createSubviews(){
             
-            gradient = { () -> GradientView in
-                let v = gradientView()
+            gradient = { () -> UIGradientView in
+                let v = UIGradientView()
                 v.translatesAutoresizingMaskIntoConstraints = false
                 let constraints = [
-                    v.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-                    v.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-                    v.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-                    v.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
+                    v.widthAnchor.constraint(equalTo: v.heightAnchor),
+                    v.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                    v.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+                    v.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.66)
                     ]
+                constraints.last!.identifier = "pad_constraint"
                 contentView.addSubview(v)
                 NSLayoutConstraint.activate(constraints)
                 return v
@@ -225,6 +247,7 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
     var rowCount: Int  = 3
     
     var textSize: Int = 12
+    var padding: CGFloat = 0.66
     
     var gradientDirection: GradientDirection = .vertical
     var startColor: CGColor = UIColor(colorLiteralRed: 0.1372, green: 0.3254, blue: 0.63921, alpha: 1.0).cgColor
@@ -360,7 +383,10 @@ extension UIDialerView: UICollectionViewDataSource {
         let cell = collectionView.dequeueReusableCell(
             withReuseIdentifier: UIDialerView.internalResuseIdent, for: indexPath) as! internalViewCell
         
+        // Setup Cell
         setCellLocalGradient(indexPath: indexPath, cell: cell)
+        cell.padding = padding
+        
         return cell
         
     }
