@@ -212,8 +212,11 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
                 NSLayoutConstraint.activate(constraints)
                 return v
             }()
-
-            
+        }
+        
+        fileprivate override func prepareForReuse() {
+            super.prepareForReuse()
+            gradient.removeTarget(nil, action: nil, for: [.allTouchEvents])
         }
     }
     // MARK: DELEGATE 
@@ -389,6 +392,7 @@ extension UIDialerView: UICollectionViewDataSource {
         setCellLocalGradient(indexPath: indexPath, cell: cell)
         cell.gradient.titleLabel?.textAlignment = .center
         cell.padding = padding
+        cell.gradient.tag = indexPath.item
 
         dataSource?.dialView(cell.gradient, index: indexPath.item)
         

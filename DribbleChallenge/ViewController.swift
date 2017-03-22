@@ -130,8 +130,12 @@ extension ViewController: UIDialerViewDataSource {
             button.setTitle("C", for: .normal)
         default:
             button.setTitle("\(index+1)", for: .normal)
-
         }
+        button.addTarget(self, action: #selector(keypadAction), for: .touchUpInside)
+    }
+    
+    @objc func keypadAction(sender:UIControl?){
+        print("pressed \(sender?.tag ?? -1 )")
     }
 }
 
