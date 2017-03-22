@@ -84,11 +84,32 @@ class ViewController: UIViewController {
 
     }
 
+    // MARK: LIFE CYCLE
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        
+        coordinator.animateAlongsideTransition(in: keypad, animation: nil, completion: { _ in
+            
+            if size.height > size.width {
+                // Portrait Mode
+                self.keypad.rowCount = 3
+                self.keypad.resize()
+            }
+            else {
+                // Landscape
+                self.keypad.rowCount = 9
+                self.keypad.resize()
+            }
+        })
+       
+    }
+    
+    
 }
 
 extension ViewController: UIDialerViewDataSource {

@@ -299,6 +299,11 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
         return CGSize(width: (textSize + spacing) * rowCount, height: (numItems / rowCount) * (textSize + spacing) )
     }
     
+    func resize(){
+        //collectionView.reloadData()
+        collectionView.collectionViewLayout.invalidateLayout()
+    }
+    
     // MARK: FLOW LAYOUT DELEGATE
     
     func collectionView(_ collectionView: UICollectionView,
@@ -306,7 +311,7 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
         
         let parentViewSize = collectionView.frame
-        let cellSize = (min(parentViewSize.width, parentViewSize.height) / CGFloat(rowCount)) - 1
+        let cellSize = (parentViewSize.width / CGFloat(rowCount)) - 1
         return CGSize(width: cellSize, height: cellSize)
         
     }
