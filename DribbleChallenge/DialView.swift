@@ -13,15 +13,19 @@ import UIKit
 
 fileprivate class internalViewCell: UICollectionViewCell {
     
-    var gradient: UIGradientView!
+    // MARK: PROPERTIES 
     
-    var padding: CGFloat {
+    private static let heightConstraintMultiplierID = UUID().uuidString
+    static let defaultPadding:CGFloat = 0.66
+    
+    var padding: CGFloat { // Padding is the gap between collection cell and child gradient view
+
         get{
             return gradient.constraints.first?.multiplier ?? 1.0
         }
         set(mult) {
             _ = contentView.constraints.filter {
-                if let s = $0.identifier, s == "pad_constraint" {
+                if let s = $0.identifier, s == internalViewCell.heightConstraintMultiplierID {
                     return true
                 }
                 return false
@@ -33,6 +37,30 @@ fileprivate class internalViewCell: UICollectionViewCell {
         }
     }
     
+    // MARK: VIEWS
+    
+    var gradient: UIGradientView!
+
+    func _createSubviews(){
+        
+        gradient = { () -> UIGradientView in
+            let v = UIGradientView()
+            v.translatesAutoresizingMaskIntoConstraints = false
+            let constraints = [
+                v.widthAnchor.constraint(equalTo: v.heightAnchor),
+                v.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                v.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+                v.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: internalViewCell.defaultPadding)
+            ]
+            constraints.last!.identifier = internalViewCell.heightConstraintMultiplierID
+            contentView.addSubview(v)
+            NSLayoutConstraint.activate(constraints)
+            return v
+        }()
+    }
+    
+    // MARK: INITs
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         _createSubviews()
@@ -43,31 +71,13 @@ fileprivate class internalViewCell: UICollectionViewCell {
         _createSubviews()
     }
     
-    // This will be called right after init and so there will be no
-    // time for parent collection to edit the value....
-    
-    func _createSubviews(){
-        
-        gradient = { () -> UIGradientView in
-            let v = UIGradientView()
-            v.translatesAutoresizingMaskIntoConstraints = false
-            let constraints = [
-                v.widthAnchor.constraint(equalTo: v.heightAnchor),
-                v.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-                v.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-                v.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.66)
-            ]
-            constraints.last!.identifier = "pad_constraint"
-            contentView.addSubview(v)
-            NSLayoutConstraint.activate(constraints)
-            return v
-        }()
-    }
+    // MARK: LIFE CYCLE
     
     fileprivate override func prepareForReuse() {
         super.prepareForReuse()
         gradient.removeTarget(nil, action: nil, for: [.allTouchEvents])
     }
+    
 }
 
 // MARK: DIALER VIEW
