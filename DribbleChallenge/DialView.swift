@@ -9,152 +9,64 @@
 import Foundation
 import UIKit
 
-// MARK: APPEARANCE TRAITS
+// MARK: DIAL CELL
 
-protocol CircularView: class {
-}
-extension CircularView {
+fileprivate class internalViewCell: UICollectionViewCell {
     
-    func setLayer(_ layer:CALayer){
-        layer.cornerRadius = layer.frame.width / 2.0
-        layer.masksToBounds = true
-        layer.backgroundColor = UIColor.red.cgColor
-    }
+    var gradient: UIGradientView!
     
-}
-
-
-enum GradientDirection {
-    
-    case horizontal
-    case vertical
-    case diagonal
-    case unknown
-    
-}
-
-protocol GradientView: class {
-    
-    var gradientLayer:CAGradientLayer! { get set }
-    var startColor: UIColor? { get set }
-    var endColor: UIColor? { get set }
-    var direction: GradientDirection { get set }
-    
-}
-extension GradientView {
-    
-    var startColor: UIColor? {
-        get {
-            guard
-                let c = gradientLayer.colors?.first else
-            {
-                return nil
-            }
-            let color = c as! CGColor
-            return UIColor.init(cgColor: color)
+    var padding: CGFloat {
+        get{
+            return gradient.constraints.first?.multiplier ?? 1.0
         }
-        set(color){
-            gradientLayer.colors?[0] = color?.cgColor
-        }
-    }
-    
-    var endColor: UIColor? {
-        get {
-            guard
-                let c = gradientLayer.colors?.last else
-            {
-                return nil
-            }
-            let color = c as! CGColor
-            return UIColor.init(cgColor: color)
-        }
-        set(color){
-            gradientLayer.colors?[1] = color?.cgColor
-        }
-    }
-    
-    var direction: GradientDirection {
-        get {
-            switch gradientLayer.endPoint {
-            case CGPoint(x: 0, y: 1):
-                return GradientDirection.vertical
-            case CGPoint(x: 1, y: 0):
-                return GradientDirection.horizontal
-            case CGPoint(x: 1, y: 1):
-                return GradientDirection.diagonal
-            default:
-                return GradientDirection.unknown
-            }
-        }
-        set(direction) {
-            switch direction {
-            case .horizontal:
-                gradientLayer.endPoint = CGPoint(x: 1, y: 0)
-            case .vertical:
-                gradientLayer.endPoint = CGPoint(x: 0, y: 1)
-            case .diagonal:
-                gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-            case .unknown:
-                break
+        set(mult) {
+            _ = contentView.constraints.filter {
+                if let s = $0.identifier, s == "pad_constraint" {
+                    return true
+                }
+                return false
+                }.map {
+                    let newConstraint = gradient.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: mult)
+                    NSLayoutConstraint.deactivate([$0])
+                    NSLayoutConstraint.activate([newConstraint])
             }
         }
     }
-    
-    func setLayer(_ layer:CALayer){
-        gradientLayer = CAGradientLayer()
-        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-        gradientLayer.bounds = layer.bounds
-        gradientLayer.colors = [UIColor.red.cgColor, UIColor.red.cgColor]
-        layer.addSublayer(gradientLayer)
-    }
-    
-}
-
-
-protocol Resizeable: class {
-}
-extension Resizeable {
-    
-    func resize(layer:CALayer){
-        for child in layer.sublayers ?? [] {
-            
-            // Bit of hack, we only want to resize upwards as it was causing weird 
-            // animated resizing on cells. Should figure out a way to better resize cells
-            if child.frame.width < layer.bounds.width || child.frame.height < layer.bounds.height {
-                child.frame = layer.bounds
-            }
-            resize(layer: child)
-        }
-    }
-    
-}
-
-// MARK: GRADIENT VIEW
-
-class UIGradientView: UIButton, CircularView, GradientView, Resizeable {
-    
-    var gradientLayer:CAGradientLayer!
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        createSubviews()
+        _createSubviews()
     }
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-        createSubviews()
-    }
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        resize(layer: layer)
-        (self as CircularView).setLayer(layer)
+        _createSubviews()
     }
     
-    func createSubviews(){
-        layoutMargins = UIEdgeInsets.zero
-        (self as GradientView).setLayer(layer)
-        (self as CircularView).setLayer(layer)
+    // This will be called right after init and so there will be no
+    // time for parent collection to edit the value....
+    
+    func _createSubviews(){
+        
+        gradient = { () -> UIGradientView in
+            let v = UIGradientView()
+            v.translatesAutoresizingMaskIntoConstraints = false
+            let constraints = [
+                v.widthAnchor.constraint(equalTo: v.heightAnchor),
+                v.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                v.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+                v.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.66)
+            ]
+            constraints.last!.identifier = "pad_constraint"
+            contentView.addSubview(v)
+            NSLayoutConstraint.activate(constraints)
+            return v
+        }()
+    }
+    
+    fileprivate override func prepareForReuse() {
+        super.prepareForReuse()
+        gradient.removeTarget(nil, action: nil, for: [.allTouchEvents])
     }
 }
 
@@ -166,65 +78,8 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
     
     fileprivate static let internalResuseIdent = UUID().uuidString
     
-    fileprivate class internalViewCell: UICollectionViewCell {
-        
-        var gradient: UIGradientView!
-        
-        var padding: CGFloat {
-            get{
-                return gradient.constraints.first?.multiplier ?? 1.0
-            }
-            set(mult) {
-                _ = contentView.constraints.filter {
-                    if let s = $0.identifier, s == "pad_constraint" {
-                        return true
-                    }
-                    return false
-                }.map {
-                    let newConstraint = gradient.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: mult)
-                    NSLayoutConstraint.deactivate([$0])
-                    NSLayoutConstraint.activate([newConstraint])
-                }
-            }
-        }
 
-        override init(frame: CGRect) {
-            super.init(frame: frame)
-            _createSubviews()
-        }
-        
-        required init?(coder aDecoder: NSCoder) {
-            super.init(coder: aDecoder)
-            _createSubviews()
-        }
-        
-        // This will be called right after init and so there will be no
-        // time for parent collection to edit the value....
-        
-        func _createSubviews(){
-            
-            gradient = { () -> UIGradientView in
-                let v = UIGradientView()
-                v.translatesAutoresizingMaskIntoConstraints = false
-                let constraints = [
-                    v.widthAnchor.constraint(equalTo: v.heightAnchor),
-                    v.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-                    v.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-                    v.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.66)
-                    ]
-                constraints.last!.identifier = "pad_constraint"
-                contentView.addSubview(v)
-                NSLayoutConstraint.activate(constraints)
-                return v
-            }()
-        }
-        
-        fileprivate override func prepareForReuse() {
-            super.prepareForReuse()
-            gradient.removeTarget(nil, action: nil, for: [.allTouchEvents])
-        }
-    }
-    // MARK: DELEGATE 
+    // MARK: DELEGATE
     var dataSource: UIDialerViewDataSource? {
         didSet {
             collectionView.reloadData()
