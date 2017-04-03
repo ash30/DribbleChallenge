@@ -73,7 +73,7 @@ fileprivate class internalViewCell: UICollectionViewCell {
     
     // MARK: LIFE CYCLE
     
-    fileprivate override func prepareForReuse() {
+    override func prepareForReuse() {
         super.prepareForReuse()
         gradient.removeTarget(nil, action: nil, for: [.allTouchEvents])
     }
@@ -82,30 +82,12 @@ fileprivate class internalViewCell: UICollectionViewCell {
 
 // MARK: DIALER VIEW
 
-class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
+class UIDialerView: UIView {
     
     // MARK: CLASS VARS
     
     fileprivate static let internalResuseIdent = UUID().uuidString
     
-
-    // MARK: DELEGATE
-    var dataSource: UIDialerViewDataSource? {
-        didSet {
-            collectionView.reloadData()
-        }
-    }
-    
-    
-    // MARK: CHILD COLLECTION VIEW
-    
-    var collectionView: UICollectionView! {
-        didSet{
-            collectionView.register(
-                internalViewCell.self, forCellWithReuseIdentifier: UIDialerView.internalResuseIdent
-            )
-        }
-    }
     
     // MARK: CONFIGs
     
@@ -122,6 +104,26 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
     var gradientDirection: GradientDirection = .vertical
     var startColor: CGColor = UIColor(colorLiteralRed: 0.1372, green: 0.3254, blue: 0.63921, alpha: 1.0).cgColor
     var endColor: CGColor = UIColor(colorLiteralRed: 0.6470, green: 0.1607, blue: 0.3803, alpha: 1.0).cgColor
+
+    
+    // MARK: DELEGATE
+    
+    var dataSource: UIDialerViewDataSource? {
+        didSet {
+            collectionView.reloadData()
+        }
+    }
+    
+    
+    // MARK: CHILD COLLECTION VIEW
+    
+    var collectionView: UICollectionView! {
+        didSet{
+            collectionView.register(
+                internalViewCell.self, forCellWithReuseIdentifier: UIDialerView.internalResuseIdent
+            )
+        }
+    }
 
     
     // MARK: INIT
@@ -167,13 +169,20 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
         
     }
     
+
+    
+}
+
+// MARK: LAYOUT AND SIZING
+
+extension UIDialerView: UICollectionViewDelegateFlowLayout {
+    
     override var intrinsicContentSize: CGSize {
-        let spacing = textSize * 2 
+        let spacing = textSize * 2
         return CGSize(width: (textSize + spacing) * rowCount, height: (numItems / rowCount) * (textSize + spacing) )
     }
     
     func resize(){
-        //collectionView.reloadData()
         collectionView.collectionViewLayout.invalidateLayout()
     }
     
@@ -188,8 +197,8 @@ class UIDialerView: UIView, UICollectionViewDelegateFlowLayout {
         return CGSize(width: cellSize, height: cellSize)
         
     }
-    
 }
+
 
 extension UIDialerView: UICollectionViewDataSource {
     
@@ -270,15 +279,6 @@ extension UIDialerView: UICollectionViewDataSource {
         
         
     }
-}
-
-// DELEGATE PROTOCOL
-
-protocol UIDialerViewDataSource{
-    
-    var dialViewItemCount: Int { get }
-    func dialView(_ button: UIButton, index: Int)
-    
 }
 
 
