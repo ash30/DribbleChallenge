@@ -13,10 +13,12 @@
 		083011BF1E7B51FD003BE44D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 083011BE1E7B51FD003BE44D /* Assets.xcassets */; };
 		083011C21E7B51FD003BE44D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 083011C01E7B51FD003BE44D /* LaunchScreen.storyboard */; };
 		083011CA1E7B5262003BE44D /* DialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 083011C91E7B5262003BE44D /* DialView.swift */; };
+		08C990761E93004F00335A58 /* GradientUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08C990751E93004F00335A58 /* GradientUtils.swift */; };
 		08F5EA181E92EF60005E4DF8 /* CircularView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F5EA171E92EF60005E4DF8 /* CircularView.swift */; };
 		08F5EA1B1E92F52E005E4DF8 /* GradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F5EA1A1E92F52E005E4DF8 /* GradientView.swift */; };
 		08F5EA1D1E92F5D4005E4DF8 /* ResizingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F5EA1C1E92F5D4005E4DF8 /* ResizingView.swift */; };
 		08F5EA1F1E92F6D7005E4DF8 /* UIGradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F5EA1E1E92F6D7005E4DF8 /* UIGradientView.swift */; };
+		08F5EA221E92FF09005E4DF8 /* UIDialViewDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F5EA211E92FF09005E4DF8 /* UIDialViewDataSource.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,10 +30,12 @@
 		083011C11E7B51FD003BE44D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		083011C31E7B51FD003BE44D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		083011C91E7B5262003BE44D /* DialView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DialView.swift; sourceTree = "<group>"; };
+		08C990751E93004F00335A58 /* GradientUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GradientUtils.swift; sourceTree = "<group>"; };
 		08F5EA171E92EF60005E4DF8 /* CircularView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircularView.swift; sourceTree = "<group>"; };
 		08F5EA1A1E92F52E005E4DF8 /* GradientView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GradientView.swift; sourceTree = "<group>"; };
 		08F5EA1C1E92F5D4005E4DF8 /* ResizingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResizingView.swift; sourceTree = "<group>"; };
 		08F5EA1E1E92F6D7005E4DF8 /* UIGradientView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIGradientView.swift; sourceTree = "<group>"; };
+		08F5EA211E92FF09005E4DF8 /* UIDialViewDataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIDialViewDataSource.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +70,7 @@
 			children = (
 				083011B71E7B51FD003BE44D /* AppDelegate.swift */,
 				083011B91E7B51FD003BE44D /* ViewController.swift */,
+				08C990751E93004F00335A58 /* GradientUtils.swift */,
 				08F5EA201E92F75E005E4DF8 /* Views */,
 				08F5EA191E92F4B1005E4DF8 /* View Protocols */,
 				083011BB1E7B51FD003BE44D /* Main.storyboard */,
@@ -74,6 +79,15 @@
 				083011C31E7B51FD003BE44D /* Info.plist */,
 			);
 			path = DribbleChallenge;
+			sourceTree = "<group>";
+		};
+		08C990741E92FFB300335A58 /* UIDialView */ = {
+			isa = PBXGroup;
+			children = (
+				083011C91E7B5262003BE44D /* DialView.swift */,
+				08F5EA211E92FF09005E4DF8 /* UIDialViewDataSource.swift */,
+			);
+			name = UIDialView;
 			sourceTree = "<group>";
 		};
 		08F5EA191E92F4B1005E4DF8 /* View Protocols */ = {
@@ -89,8 +103,8 @@
 		08F5EA201E92F75E005E4DF8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				083011C91E7B5262003BE44D /* DialView.swift */,
 				08F5EA1E1E92F6D7005E4DF8 /* UIGradientView.swift */,
+				08C990741E92FFB300335A58 /* UIDialView */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -169,8 +183,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				08F5EA181E92EF60005E4DF8 /* CircularView.swift in Sources */,
+				08C990761E93004F00335A58 /* GradientUtils.swift in Sources */,
 				08F5EA1F1E92F6D7005E4DF8 /* UIGradientView.swift in Sources */,
 				083011BA1E7B51FD003BE44D /* ViewController.swift in Sources */,
+				08F5EA221E92FF09005E4DF8 /* UIDialViewDataSource.swift in Sources */,
 				08F5EA1B1E92F52E005E4DF8 /* GradientView.swift in Sources */,
 				08F5EA1D1E92F5D4005E4DF8 /* ResizingView.swift in Sources */,
 				083011CA1E7B5262003BE44D /* DialView.swift in Sources */,

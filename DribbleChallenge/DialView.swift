@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 
+
 // MARK: DIAL CELL
 
 fileprivate class internalViewCell: UICollectionViewCell {
@@ -80,6 +81,7 @@ fileprivate class internalViewCell: UICollectionViewCell {
     
 }
 
+
 // MARK: DIALER VIEW
 
 class UIDialerView: UIView {
@@ -87,7 +89,6 @@ class UIDialerView: UIView {
     // MARK: CLASS VARS
     
     fileprivate static let internalResuseIdent = UUID().uuidString
-    
     
     // MARK: CONFIGs
     
@@ -105,7 +106,6 @@ class UIDialerView: UIView {
     var startColor: CGColor = UIColor(colorLiteralRed: 0.1372, green: 0.3254, blue: 0.63921, alpha: 1.0).cgColor
     var endColor: CGColor = UIColor(colorLiteralRed: 0.6470, green: 0.1607, blue: 0.3803, alpha: 1.0).cgColor
 
-    
     // MARK: DELEGATE
     
     var dataSource: UIDialerViewDataSource? {
@@ -113,7 +113,6 @@ class UIDialerView: UIView {
             collectionView.reloadData()
         }
     }
-    
     
     // MARK: CHILD COLLECTION VIEW
     
@@ -125,7 +124,6 @@ class UIDialerView: UIView {
         }
     }
 
-    
     // MARK: INIT
     
     override init(frame: CGRect) {
@@ -169,8 +167,6 @@ class UIDialerView: UIView {
         
     }
     
-
-    
 }
 
 // MARK: LAYOUT AND SIZING
@@ -186,8 +182,6 @@ extension UIDialerView: UICollectionViewDelegateFlowLayout {
         collectionView.collectionViewLayout.invalidateLayout()
     }
     
-    // MARK: FLOW LAYOUT DELEGATE
-    
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -200,61 +194,10 @@ extension UIDialerView: UICollectionViewDelegateFlowLayout {
 }
 
 
+// MARK: DATA SOURCE 
+
 extension UIDialerView: UICollectionViewDataSource {
     
-    func cellCoordinates(index:Int) -> (Int,Int) {
-        return (x: index % rowCount, y: index / rowCount)
-    }
-    
-    func normalisedCellCoordinates(x:Int, y:Int) -> (CGFloat,CGFloat){
-        let scale = CGFloat(numItems / rowCount )
-        return (x: CGFloat(x) / scale, y: CGFloat(y) / scale)
-    }
-    
-    func cellGradientCoordinates(index: Int, direction: GradientDirection) -> (CGFloat, CGFloat){
-        
-        let start_coords = cellCoordinates(index: index)
-        let end_coords = (start_coords.0 + 1 , start_coords.1 + 1)
-        let norm_start_coords = normalisedCellCoordinates(x: start_coords.0, y: start_coords.1)
-        let norm_end_coords = normalisedCellCoordinates(x: end_coords.0, y: end_coords.1)
-
-        switch direction {
-        case .vertical:
-            return (norm_start_coords.1,norm_end_coords.1)
-            
-        case .horizontal:
-            return (norm_start_coords.0,norm_end_coords.0)
-
-        default:
-            // WIP
-            return (norm_start_coords.1,norm_end_coords.1)
-        }
-        
-    }
-    
-    fileprivate func setCellLocalGradient(indexPath:IndexPath, cell: internalViewCell){
-        guard let start = startColor.components, let end = endColor.components else {
-            return
-        }
-        
-        let startVec = (start.count == 4 ? start : Array.init(repeating: start.first, count: 3)).flatMap{$0}
-        let endVec = (end.count == 4 ? end : Array.init(repeating: end.first, count: 3)).flatMap{$0}
-        
-        guard startVec.count > 2, endVec.count > 2 else {
-            return // badly defined colors
-        }
-        
-        let mults = cellGradientCoordinates(index: indexPath.item, direction: gradientDirection)
-        let vec = zip(endVec, startVec).map { $0 - $1 }
-        
-        let localStartColor = zip(startVec, vec.map{$0 * mults.0}).map { $0 + $1 }
-        let localEndColor = zip(startVec, vec.map{$0 * mults.1}).map { $0 + $1 }
-        
-        cell.gradient.startColor = UIColor(red: localStartColor[0], green: localStartColor[1], blue: localStartColor[2], alpha: 1.0)
-        cell.gradient.endColor = UIColor(red: localEndColor[0], green: localEndColor[1], blue: localEndColor[2], alpha: 1.0)
-        cell.gradient.direction = gradientDirection
-        
-    }
     
     // MARK: DATA SOURCE
     
@@ -272,7 +215,7 @@ extension UIDialerView: UICollectionViewDataSource {
         cell.gradient.titleLabel?.textAlignment = .center
         cell.padding = padding
         cell.gradient.tag = indexPath.item
-
+        
         dataSource?.dialView(cell.gradient, index: indexPath.item)
         
         return cell
@@ -280,6 +223,66 @@ extension UIDialerView: UICollectionViewDataSource {
         
     }
 }
+
+
+// MARK: APPEARANCE
+
+fileprivate extension CGColor {
+    
+    var componentsVec: [CGFloat]? {
+        guard let components = components else {
+            return nil
+        }
+        if components.count == numberOfComponents {
+            return components
+        }
+        else if components.count > 0 { // sometimes (e.g black) we only get one number stored
+            return Array.init(repeating: components.first!, count: numberOfComponents)
+        }
+        else {
+            return nil
+        }
+    }
+}
+
+private extension UIDialerView {
+    
+    func setCellLocalGradient(indexPath:IndexPath, cell: internalViewCell){
+        
+        let grid = CellLayoutGrid(numItems: numItems, rowCount: rowCount)
+        let cellCoord = grid.normalisedCellCoordinates(index: indexPath.item)
+        
+        guard
+            let color1 = startColor.componentsVec,
+            let color2 = endColor.componentsVec
+            else{
+                return
+        }
+        let colorTransitionVector = zip(color2, color1).map { $0 - $1 }
+        let gradientDirectorVector  = gradientDirection.gradientAsVector()
+        
+        let cellStartColor = { () -> [CGFloat] in
+            let mults = ( x: cellCoord.x * CGFloat(gradientDirectorVector.x), y: cellCoord.y * CGFloat(gradientDirectorVector.y))
+            let offset = colorTransitionVector.map{ $0 * max(mults.x,mults.y) }
+            return zip(color1, offset).map { $0 + $1 }
+        }()
+        
+        let cellEndColor = { () -> [CGFloat] in
+            let mults = (
+                x: (cellCoord.x + grid.normalisedGridScaleX ) * CGFloat(gradientDirectorVector.x),
+                y: (cellCoord.y + grid.normalisedGridScaleY ) * CGFloat(gradientDirectorVector.y)
+            )
+            let offset = colorTransitionVector.map{ $0 * max(mults.x,mults.y) }
+            return zip(color1, offset).map { $0 + $1 }
+        }()
+        
+        cell.gradient.startColor = UIColor(red: cellStartColor[0], green: cellStartColor[1], blue: cellStartColor[2], alpha: 1.0)
+        cell.gradient.endColor = UIColor(red: cellEndColor[0], green: cellEndColor[1], blue: cellEndColor[2], alpha: 1.0)
+        cell.gradient.direction = gradientDirection
+        
+    }
+}
+
 
 
 
