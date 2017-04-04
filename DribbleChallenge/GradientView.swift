@@ -9,15 +9,6 @@
 import Foundation
 import UIKit
 
-enum GradientDirection {
-    
-    case horizontal
-    case vertical
-    case diagonal
-    case unknown
-    
-}
-
 protocol GradientView: class {
     
     var gradientLayer:CAGradientLayer! { get set }
