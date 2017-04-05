@@ -63,7 +63,7 @@ struct CellLayoutGrid {
     private func normalisedCellCoordinates(x:Int, y:Int) -> GridPoint {
         // I think this may be wrong... surely to normal width we just use rowCount?
         let scale = CGFloat(numItems / rowCount )
-        return (x: CGFloat(x) / scale, y: CGFloat(y) / scale)
+        return (x: CGFloat(x) / CGFloat(numItems), y: CGFloat(y) / CGFloat(rowCount) )
     }
 
 
