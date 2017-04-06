@@ -90,17 +90,30 @@ class UIDialerView: UIView {
     
     fileprivate static let internalResuseIdent = UUID().uuidString
     
-    // MARK: CONFIGs
+    // MARK: SIZING PROPERTIES
     
     var numItems = 12 {
         didSet{
             collectionView.reloadData()
+            updateMaxWidthAspectConstraint()
         }
     }
-    var rowCount: Int  = 3
+    var rowCount: Int  = 3 {
+        didSet{
+            updateMaxWidthAspectConstraint()
+        }
+    }
+    
+    var fitHeight: Bool = true {
+        didSet{
+            updateMaxWidthAspectConstraint()
+        }
+    }
     
     var textSize: Int = 12
     var padding: CGFloat = 0.66
+
+    // MARK: DISPLAY PROPERTIES
     
     var gradientDirection: GradientDirection = .vertical
     var startColor: CGColor = UIColor(colorLiteralRed: 0.1372, green: 0.3254, blue: 0.63921, alpha: 1.0).cgColor
@@ -123,7 +136,7 @@ class UIDialerView: UIView {
             )
         }
     }
-
+    
     // MARK: INIT
     
     override init(frame: CGRect) {
@@ -148,6 +161,7 @@ class UIDialerView: UIView {
         
         collectionView.layoutMargins = UIEdgeInsets.zero
         collectionView.backgroundColor = nil
+        collectionView.isScrollEnabled = false
         
         addSubview(collectionView)
         collectionView.delegate = self
@@ -157,21 +171,54 @@ class UIDialerView: UIView {
         // LAYOUT
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         let margins = layoutMarginsGuide
-        let constraints = [
-            collectionView.leadingAnchor.constraint(equalTo: margins.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: margins.trailingAnchor),
+        let collectionViewConstraints = [
             collectionView.topAnchor.constraint(equalTo: margins.topAnchor),
             collectionView.bottomAnchor.constraint(equalTo: margins.bottomAnchor),
-            ]
-        NSLayoutConstraint.activate(constraints)
+            collectionView.centerXAnchor.constraint(equalTo: margins.centerXAnchor),
+            collectionView.widthAnchor.constraint(equalTo: collectionView.heightAnchor, multiplier: preferredMaxWidthAspect)
+        ]
+        collectionViewConstraints.last!.identifier = UIDialerView.widthAspectConstraintIdent
+
+        NSLayoutConstraint.activate(collectionViewConstraints)
         
     }
-    
+   
 }
 
 // MARK: LAYOUT AND SIZING
 
 extension UIDialerView: UICollectionViewDelegateFlowLayout {
+    
+    fileprivate static let widthAspectConstraintIdent = UUID().uuidString
+    
+    // MARK: AUTOLAYOUT
+    
+    var preferredMaxWidthAspect: CGFloat {
+        let dividebyRows = (1.0 / ( CGFloat(numItems) / CGFloat(rowCount) ) )
+        let maxWidth = dividebyRows * CGFloat(rowCount)
+        return maxWidth
+    }
+    
+    fileprivate func updateMaxWidthAspectConstraint() {
+        _ = collectionView.constraints.filter {
+            if let s = $0.identifier, s == UIDialerView.widthAspectConstraintIdent {
+                return true
+            }
+            return false
+            }.map {
+                NSLayoutConstraint.deactivate([$0])
+                if fitHeight {
+                    let newConstraint = collectionView.widthAnchor.constraint(equalTo: collectionView.heightAnchor, multiplier: preferredMaxWidthAspect)
+                    newConstraint.identifier = UIDialerView.widthAspectConstraintIdent
+                    NSLayoutConstraint.activate([newConstraint])
+                }
+                else {
+                    let newConstraint = collectionView.widthAnchor.constraint(equalTo: layoutMarginsGuide.widthAnchor)
+                    newConstraint.identifier = UIDialerView.widthAspectConstraintIdent
+                    NSLayoutConstraint.activate([newConstraint])
+                }
+        }
+    }
     
     override var intrinsicContentSize: CGSize {
         let spacing = textSize * 2
