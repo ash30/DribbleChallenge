@@ -221,9 +221,12 @@ extension UIDialerView: UICollectionViewDelegateFlowLayout {
     }
     
     override var intrinsicContentSize: CGSize {
+        
         let spacing = textSize * 2
         return CGSize(width: (textSize + spacing) * rowCount, height: (numItems / rowCount) * (textSize + spacing) )
     }
+    
+    // MARK: COLLECTION VIEW LAYOUT
     
     func resize(){
         collectionView.collectionViewLayout.invalidateLayout()
@@ -238,6 +241,7 @@ extension UIDialerView: UICollectionViewDelegateFlowLayout {
         return CGSize(width: cellSize, height: cellSize)
         
     }
+    
 }
 
 
@@ -264,9 +268,7 @@ extension UIDialerView: UICollectionViewDataSource {
         cell.gradient.tag = indexPath.item
         
         dataSource?.dialView(cell.gradient, index: indexPath.item)
-        
         return cell
-        
         
     }
 }
