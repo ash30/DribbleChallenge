@@ -245,7 +245,7 @@ fileprivate extension CGColor {
     }
 }
 
-private extension UIDialerView {
+fileprivate extension UIDialerView {
     
     func setCellLocalGradient(indexPath:IndexPath, cell: internalViewCell){
         
