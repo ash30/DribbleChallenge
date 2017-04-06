@@ -10,6 +10,10 @@ import UIKit
 
 class ViewController: UIViewController {
     
+    var backgroundColor = UIColor(colorLiteralRed: 0.14117, green: 0.09019, blue: 0.35294, alpha: 1)
+
+    // MARK: VIEWS
+    
     var container: UIStackView!
     var keypad: UIDialerView! {
         didSet {
@@ -19,8 +23,8 @@ class ViewController: UIViewController {
     var pin: UIDialerView!
     var label: UILabel!
     
-    var backgroundColor = UIColor(colorLiteralRed: 0.14117, green: 0.09019, blue: 0.35294, alpha: 1)
-
+    // MARK: LIFE CYCLE
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
