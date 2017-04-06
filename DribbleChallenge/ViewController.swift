@@ -42,46 +42,51 @@ class ViewController: UIViewController {
             self.view.addSubview(v)
             NSLayoutConstraint.activate(constraints)
             
-            // NEED TO WORK OUT SIZE if we want to cleverly 
-            v.distribution = .fillProportionally
+            v.distribution = .fill
             v.alignment = .fill
             v.axis = .vertical
+            v.spacing = 32.0
             return v
         }()
-        
-
         
         label = {
             let v = UILabel()
             v.text  = "TouchID or Enter PIN"
             v.textAlignment = .center
             v.textColor = UIColor.white
-
+            v.setContentHuggingPriority(UILayoutPriorityDefaultHigh, for: .vertical)
             container.addArrangedSubview(v)
             return v
         }()
         
         pin = { () -> UIDialerView in
             let v = UIDialerView()
+            v.dataSource = pinValidator
             let subContainer = UIStackView()
             subContainer.addArrangedSubview(v)
             subContainer.alignment = .center
-            subContainer.distribution = .fill
+            subContainer.distribution = .equalSpacing
             subContainer.axis = .vertical
-
+            subContainer.setContentHuggingPriority(UILayoutPriorityDefaultHigh, for: .vertical)
+            v.setContentHuggingPriority(UILayoutPriorityDefaultHigh, for: .vertical)
+            
             
             v.rowCount = 4
             v.numItems = 4
-            v.textSize = 5
+            v.textSize = 10
+            v.fitHeight = true
             v.gradientDirection = .horizontal
             v.translatesAutoresizingMaskIntoConstraints = false
             container.addArrangedSubview(subContainer)
+
             return v
         }()
         
         keypad = { () -> UIDialerView in
             let v = UIDialerView()
             v.translatesAutoresizingMaskIntoConstraints = false
+            v.setContentHuggingPriority(UILayoutPriorityDefaultLow, for: .vertical)
+
             container.addArrangedSubview(v)
             return v
         }()
