@@ -83,6 +83,10 @@ extension GradientView {
         gradientLayer.bounds = layer.bounds
         gradientLayer.colors = [UIColor.red.cgColor, UIColor.red.cgColor]
         layer.addSublayer(gradientLayer)
+
+        // We don't want relayout to be animated. 
+        gradientLayer.actions = ["position": NSNull(), "bounds":NSNull()]
+    
     }
     
 }

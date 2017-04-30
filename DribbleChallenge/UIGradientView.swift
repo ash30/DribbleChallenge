@@ -23,9 +23,10 @@ class UIGradientView: UIButton, CircularView, GradientView, Resizeable {
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         createSubviews()
-    }
-    override func layoutSubviews() {
-        super.layoutSubviews()
+    }    
+    
+    override func layoutSublayers(of layer: CALayer) {
+        super.layoutSublayers(of: layer)
         resize(layer: layer)
         (self as CircularView).setLayer(layer)
     }
