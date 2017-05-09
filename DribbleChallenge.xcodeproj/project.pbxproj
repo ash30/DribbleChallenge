@@ -70,9 +70,7 @@
 			children = (
 				083011B71E7B51FD003BE44D /* AppDelegate.swift */,
 				083011B91E7B51FD003BE44D /* ViewController.swift */,
-				08C990751E93004F00335A58 /* GradientUtils.swift */,
 				08F5EA201E92F75E005E4DF8 /* Views */,
-				08F5EA191E92F4B1005E4DF8 /* View Protocols */,
 				083011BB1E7B51FD003BE44D /* Main.storyboard */,
 				083011BE1E7B51FD003BE44D /* Assets.xcassets */,
 				083011C01E7B51FD003BE44D /* LaunchScreen.storyboard */,
@@ -81,32 +79,43 @@
 			path = DribbleChallenge;
 			sourceTree = "<group>";
 		};
+		086E91211EC1AB4F00599101 /* UIGradientView */ = {
+			isa = PBXGroup;
+			children = (
+				08F5EA1E1E92F6D7005E4DF8 /* UIGradientView.swift */,
+				08C990751E93004F00335A58 /* GradientUtils.swift */,
+			);
+			path = UIGradientView;
+			sourceTree = "<group>";
+		};
 		08C990741E92FFB300335A58 /* UIDialView */ = {
 			isa = PBXGroup;
 			children = (
 				083011C91E7B5262003BE44D /* DialView.swift */,
 				08F5EA211E92FF09005E4DF8 /* UIDialViewDataSource.swift */,
 			);
-			name = UIDialView;
+			path = UIDialView;
 			sourceTree = "<group>";
 		};
-		08F5EA191E92F4B1005E4DF8 /* View Protocols */ = {
+		08F5EA191E92F4B1005E4DF8 /* protocols */ = {
 			isa = PBXGroup;
 			children = (
 				08F5EA1C1E92F5D4005E4DF8 /* ResizingView.swift */,
 				08F5EA171E92EF60005E4DF8 /* CircularView.swift */,
 				08F5EA1A1E92F52E005E4DF8 /* GradientView.swift */,
 			);
-			name = "View Protocols";
+			name = protocols;
+			path = Protocols;
 			sourceTree = "<group>";
 		};
 		08F5EA201E92F75E005E4DF8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				08F5EA1E1E92F6D7005E4DF8 /* UIGradientView.swift */,
+				08F5EA191E92F4B1005E4DF8 /* protocols */,
+				086E91211EC1AB4F00599101 /* UIGradientView */,
 				08C990741E92FFB300335A58 /* UIDialView */,
 			);
-			name = Views;
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
