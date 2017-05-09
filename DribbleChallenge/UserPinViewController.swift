@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class UserPinViewController: UIViewController {
     
     var backgroundColor = UIColor(colorLiteralRed: 0.14117, green: 0.09019, blue: 0.35294, alpha: 1)
 
@@ -22,6 +22,10 @@ class ViewController: UIViewController {
     }
     var pin: UIDialerView!
     var label: UILabel!
+    
+    // MARK: DEPS
+    
+    let pinValidator = PinValidator()
     
     // MARK: LIFE CYCLE
     
@@ -109,7 +113,7 @@ class ViewController: UIViewController {
     
 }
 
-extension ViewController: UIDialerViewDataSource {
+extension UserPinViewController: UIDialerViewDataSource {
     
     var dialViewItemCount: Int {
         return 12
