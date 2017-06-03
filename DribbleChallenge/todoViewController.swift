@@ -48,36 +48,40 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
     // MARK: TABLEVIEW DELEGATE
     
-    func animationDidStop(_ anim: CAAnimation, finished flag: Bool) {
-        data.remove(at: anim.value(forKey: "index") as! Int)
-        tableView.reloadData()
 
-    }
-    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let cell = tableView.cellForRow(at: indexPath)
+
+        guard let cell = tableView.cellForRow(at: indexPath) else {
+            print("Selected Cell Index Doesn't exist in table")
+            return
+        }
+        
+        guard let coverImage = cell.contentView.resizableSnapshotView(from: cell.bounds, afterScreenUpdates: true, withCapInsets: .zero) else {
+            
+            print("Snapshot Failed")
+            return
+        }
+        cell.superview!.addSubview(coverImage)
+        coverImage.frame = cell.frame
+        cell.contentView.isHidden = true
 
         
         CATransaction.begin()
         CATransaction.setCompletionBlock {
-            
-            CATransaction.begin()
-            let animation = CABasicAnimation(keyPath: #keyPath(CALayer.position))
-            animation.toValue = CGPoint(x: cell!.center.x, y: tableView.bounds.height)
-            animation.delegate = self
-            animation.setValue(indexPath.item, forKey: "index")
-            animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseIn)
-            cell?.layer.add(animation, forKey: nil)
-            CATransaction.commit()
 
+            self.data.remove(at: indexPath.item)
+            tableView.deleteRows(at:[indexPath], with:.bottom)
+            
+            UIView.animate(withDuration: 1.0, animations: {
+                coverImage.transform = coverImage.transform.translatedBy(x: 0, y: tableView.bounds.height)
+            }){ (Bool) in
+                coverImage.removeFromSuperview()
+            }
         }
         
-        let animation = CABasicAnimation(keyPath: #keyPath(CALayer.transform))
-        animation.toValue = CATransform3DMakeScale(1.1, 1.2, 2)
-        animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
-
-        cell?.layer.add(animation, forKey: nil)
-        
+        UIView.animate(withDuration: 0.1, animations: {
+            coverImage.transform = coverImage.transform.scaledBy(x: 1.1, y: 1)
+        })
         CATransaction.commit()
         
     }
