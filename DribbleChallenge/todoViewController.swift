@@ -20,20 +20,42 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
     var constraints: [NSLayoutConstraint] = []
     
     override func viewDidLoad() {
-        let view = UITableView()
-        self.view.addSubview(view)
         
-        view.translatesAutoresizingMaskIntoConstraints = false
-        let constraints = [
-            view.topAnchor.constraint(equalTo: self.view.layoutMarginsGuide.topAnchor),
-            view.bottomAnchor.constraint(equalTo: self.view.layoutMarginsGuide.bottomAnchor),
-            view.leadingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.leadingAnchor),
-            view.trailingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.trailingAnchor)
-        ]
-        NSLayoutConstraint.activate(constraints)
-        view.dataSource = self
-        view.delegate = self
-        tableView = view 
+        
+        let containingView: UIView = {
+            let view = UIView()
+            view.translatesAutoresizingMaskIntoConstraints = false
+            let constraints = [
+                view.topAnchor.constraint(equalTo: self.view.layoutMarginsGuide.topAnchor, constant:35),
+                view.bottomAnchor.constraint(equalTo: self.view.layoutMarginsGuide.bottomAnchor),
+                view.leadingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.leadingAnchor),
+                view.trailingAnchor.constraint(equalTo: self.view.layoutMarginsGuide.trailingAnchor)
+            ]
+            self.view.addSubview(view)
+            NSLayoutConstraint.activate(constraints)
+            return view
+        }()
+        
+        tableView = {
+            let view = UITableView()
+            view.translatesAutoresizingMaskIntoConstraints = false
+            let constraints = [
+                view.topAnchor.constraint(equalTo: containingView.layoutMarginsGuide.topAnchor),
+                view.bottomAnchor.constraint(equalTo: containingView.layoutMarginsGuide.bottomAnchor),
+                view.leadingAnchor.constraint(equalTo: containingView.layoutMarginsGuide.leadingAnchor),
+                view.trailingAnchor.constraint(equalTo: containingView.layoutMarginsGuide.trailingAnchor)
+            ]
+            
+            containingView.addSubview(view)
+            NSLayoutConstraint.activate(constraints)
+            view.dataSource = self
+            view.delegate = self
+            return view
+        }()
+        
+        view.backgroundColor = UIColor.red
+        tableView.backgroundColor = UIColor.blue
+        tableView.clipsToBounds = false
         
     }
     
@@ -121,6 +143,7 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
         let cell = UITableViewCell()
         cell.textLabel?.text = "Test \(data[indexPath.item])"
         cell.selectionStyle = .none
+        cell.contentView.backgroundColor = UIColor.white
         return cell
     }
     
@@ -159,8 +182,6 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-
-        return
         
         guard let cell = tableView.cellForRow(at: indexPath) else {
             print("Selected Cell Index Doesn't exist in table")
@@ -174,6 +195,7 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
         }
         cell.superview!.addSubview(coverImage)
         coverImage.frame = cell.frame
+        coverImage.layer.zPosition = 100.0
         cell.contentView.isHidden = true
 
         
@@ -190,9 +212,10 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             }
         }
         
-        UIView.animate(withDuration: 0.1, animations: {
+        UIView.animate(withDuration: 0.3, animations: {
             coverImage.transform = coverImage.transform.scaledBy(x: 1.1, y: 1)
         })
+                
         CATransaction.commit()
         
     }
