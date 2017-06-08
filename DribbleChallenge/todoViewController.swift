@@ -9,10 +9,15 @@
 import Foundation
 import UIKit
 
-class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, CAAnimationDelegate {
+class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UITextFieldDelegate{
     
     var tableView: UITableView!
     var data = Array(0...10)
+    
+    var headerHeight = 50.0
+    
+    var header: TodoTableSectionView?
+    var constraints: [NSLayoutConstraint] = []
     
     override func viewDidLoad() {
         let view = UITableView()
@@ -32,6 +37,83 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
         
     }
     
+    // MARK: TEXT DELEGATE 
+    func textFieldDidBeginEditing(_ textField: UITextField){
+        self.headerHeight = 100
+        constraints[0].constant = 100
+
+        CATransaction.begin()
+        CATransaction.setCompletionBlock {
+            
+            print("test \(self.header?.frame)")
+            //self.tableView?.beginUpdates()
+            //self.tableView?.endUpdates()
+
+
+        }
+        
+
+        UIView.animate(withDuration: 0.3, animations: {
+            self.tableView?.beginUpdates()
+            self.tableView?.endUpdates()
+            self.tableView.layoutIfNeeded()
+
+        } )
+        
+        CATransaction.commit()
+        
+    }
+    /*
+ 
+     I think what happens is we're not animating the header view widget height
+     JUST the height the table uses to calculate offset ( which is working! )
+     
+     For some reason this doesn't affect the view widget
+     THEN when we next click on the thing, it jumps to what is was supposed to be
+     
+     EDIT: So we fixed the jumping - we needed to force the constraints to resolve
+     after the height change so they too get implicitly animated
+     
+     Problem persists though:
+     
+        On edit: the frame is updating new header height,
+        on exit: the frame updates to old height, NOT new height
+        On subsequent edits, layout keeps using old height
+     
+    */
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        
+
+        self.headerHeight = 50
+        constraints[0].constant = 50
+        constraints[0].firstAttribute
+
+        
+        CATransaction.begin()
+        CATransaction.setCompletionBlock {
+            //self.tableView.reloadData()
+            print("test \(self.header?.frame)")
+
+            
+
+        }
+        UIView.animate(withDuration: 0.3, animations: {
+            self.tableView?.beginUpdates()
+            self.tableView?.endUpdates()
+            self.tableView.layoutIfNeeded()
+
+        } )
+        
+        
+        CATransaction.commit()
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+    
     // MARK: TABLEVIEW
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -48,9 +130,38 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
     // MARK: TABLEVIEW DELEGATE
     
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let v = TodoTableSectionView()
+        header = v
+        v.textfield.delegate = self
+        
+        //v.translatesAutoresizingMaskIntoConstraints = false
+        v.autoresizingMask = [
+            .flexibleWidth,
+        ]
+        
+        constraints = [
+            v.heightAnchor.constraint(equalToConstant: CGFloat(headerHeight))
+        ]
+        NSLayoutConstraint.activate(constraints)
+
+        
+        return v
+    }
+    
+
+    
+    func tableView(_ tableView: UITableView, estimatedHeightForHeaderInSection section: Int) -> CGFloat {
+        return CGFloat(headerHeight)
+
+    }
+    
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 
+        return
+        
         guard let cell = tableView.cellForRow(at: indexPath) else {
             print("Selected Cell Index Doesn't exist in table")
             return
