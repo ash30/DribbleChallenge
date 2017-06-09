@@ -19,13 +19,27 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
     var headerHeight = 50.0
     
     var header: TodoTableSectionView?
-    var constraints: [NSLayoutConstraint] = []
+    
+    private var containingView:UIStackView?
+    
+    private lazy var headerTransitionView:UIView? = {
+        guard
+            let header = self.header,
+            let containingView = self.containingView,
+            let view = header.contentView.positionedSnapshot(snapshotSuperView: header, afterScreenUpdates: true)
+        else {
+            return nil
+        }
+        return view
+        
+    }()
+    
     
     // MARK: LIFE CYCLE
     
     override func viewDidLoad() {
         
-        let containingView: UIStackView = {
+        containingView = {
             
             // Create parent view for styling
             let view = UIView()
@@ -66,23 +80,33 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             view.backgroundColor = UIColor.blue
             view.textfield.delegate = self
             view.addButton.addTarget(self, action: #selector(createRow), for: .touchDown)
-            containingView.addArrangedSubview(view)
+            let constraints = [
+                view.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+            ]
+            NSLayoutConstraint.activate(constraints)
+            containingView!.addArrangedSubview(view)
             return view
         }()
         
-        
         tableView = {
             let view = UITableView()
-            containingView.addArrangedSubview(view)
+            containingView!.addArrangedSubview(view)
             view.dataSource = self
             view.delegate = self
             return view
         }()
-        
 
         // Display Preferences
         view.backgroundColor = UIColor.red
         tableView.backgroundColor = UIColor.blue
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        // We create this here because snapshot needs views displayed
+        // but we need it finished before any user interaction
+        headerTransitionView?.isHidden = true
+        headerTransitionView?.center.y += 50
+        
     }
     
     // MARK: ROW CREATION
@@ -97,29 +121,51 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             return
         }
         
+        let heightConstraints = header?.constraintsAffectingLayout(for: .vertical).filter { $0.firstAttribute == .height } ?? []
+        heightConstraints.map { $0.constant = 50 }
+        
+        header?.contentView.isHidden = true
+        
         CATransaction.begin()
 
         UIView.animate(withDuration: 0.5, animations: {
-            coverImage.center = initialCell.convert(initialCell.center, to: self.view)
+
             
             self.data.insert(0, at: 0)
-            self.tableView.insertRows(at: [firstIndex], with: .bottom)
+            
+            self.tableView?.beginUpdates()
+            self.tableView.insertRows(at: [firstIndex], with: .top)
+            self.tableView?.endUpdates()
             let newCell = self.tableView.cellForRow(at: firstIndex)
             newCell?.isHidden = true
+            self.view.layoutIfNeeded()
+            
+            coverImage.transform = coverImage.transform.translatedBy(x: 0, y: 40.0)
 
         }){ (Bool) in
             let newCell = self.tableView.cellForRow(at: firstIndex)
             newCell?.isHidden = false
             coverImage.removeFromSuperview()
+            
+            // SLIDE UP TRANSITION
+            CATransaction.begin()
+            CATransaction.setCompletionBlock {
+                self.header?.contentView.isHidden = false
+                self.headerTransitionView?.isHidden = true
+            }
+            self.headerTransitionView?.isHidden = false
+            let animation = CABasicAnimation(keyPath: #keyPath(CALayer.position))
+            animation.byValue = CGPoint(x: 0, y: -50)
+            animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseIn)
+            self.headerTransitionView?.layer.add(animation, forKey: nil)
+            CATransaction.commit()
+
+            
         }
         
-
-        
-
-
-        
-        
         CATransaction.commit()
+        
+
         
     }
     
@@ -140,22 +186,12 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
     }
 
     func textFieldDidEndEditing(_ textField: UITextField) {
-        
+        createRow()
 
-        let heightConstraints = header?.constraintsAffectingLayout(for: .vertical).filter { $0.firstAttribute == .height } ?? []
-        heightConstraints.map { $0.constant = 50 }
-        
-        CATransaction.begin()
-        UIView.animate(withDuration: 0.3, animations: {
-            self.tableView?.beginUpdates()
-            self.tableView?.endUpdates()
-            self.view.layoutIfNeeded()
-        } )
-        CATransaction.commit()
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
+        textField.endEditing(true)
         return true
     }
     
@@ -223,15 +259,15 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
 
 extension UIView {
     
-    func positionedSnapshot(snapshotSuperView:UIView) -> UIView? {
-
+    func positionedSnapshot(snapshotSuperView:UIView, afterScreenUpdates:Bool = false) -> UIView? {
         guard let parent = superview else {
             return nil
         }
-        guard let coverImage = resizableSnapshotView(from: bounds, afterScreenUpdates: true, withCapInsets: .zero) else {
+        guard let coverImage = resizableSnapshotView(from: bounds, afterScreenUpdates: afterScreenUpdates, withCapInsets: .zero) else {
             print("Snapshot Failed")
             return nil
         }
+        coverImage.translatesAutoresizingMaskIntoConstraints = false
         snapshotSuperView.addSubview(coverImage)
         coverImage.frame = parent.convert(frame, to: snapshotSuperView)
         return coverImage
