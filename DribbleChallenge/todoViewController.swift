@@ -18,7 +18,7 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
     var headerHeight = 50.0
     
-    var header: UIView?
+    var header: TodoTableSectionView?
     var constraints: [NSLayoutConstraint] = []
     
     // MARK: LIFE CYCLE
@@ -61,10 +61,11 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             return stack
         }()
         
-        header = { () -> UIView in
+        header = { 
             let view = TodoTableSectionView()
             view.backgroundColor = UIColor.blue
             view.textfield.delegate = self
+            view.addButton.addTarget(self, action: #selector(createRow), for: .touchDown)
             containingView.addArrangedSubview(view)
             return view
         }()
@@ -84,13 +85,49 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
         tableView.backgroundColor = UIColor.blue
     }
     
+    // MARK: ROW CREATION
+    @objc func createRow(){
+        
+        let firstIndex = IndexPath(item: 0, section: 0)
+        
+        guard let coverImage = header?.contentView.positionedSnapshot(snapshotSuperView:self.view) else {
+            return
+        }
+        guard let initialCell = tableView.cellForRow(at: firstIndex) else {
+            return
+        }
+        
+        CATransaction.begin()
+
+        UIView.animate(withDuration: 0.5, animations: {
+            coverImage.center = initialCell.convert(initialCell.center, to: self.view)
+            
+            self.data.insert(0, at: 0)
+            self.tableView.insertRows(at: [firstIndex], with: .bottom)
+            let newCell = self.tableView.cellForRow(at: firstIndex)
+            newCell?.isHidden = true
+
+        }){ (Bool) in
+            let newCell = self.tableView.cellForRow(at: firstIndex)
+            newCell?.isHidden = false
+            coverImage.removeFromSuperview()
+        }
+        
+
+        
+
+
+        
+        
+        CATransaction.commit()
+        
+    }
     
     // MARK: TEXT DELEGATE 
     func textFieldDidBeginEditing(_ textField: UITextField){
 
         let heightConstraints = header?.constraintsAffectingLayout(for: .vertical).filter { $0.firstAttribute == .height } ?? []
-        
-        heightConstraints.map { $0.constant = 100 }
+        _ = heightConstraints.map { $0.constant = 75 }
 
         CATransaction.begin()
         UIView.animate(withDuration: 0.3, animations: {
@@ -113,7 +150,6 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             self.tableView?.beginUpdates()
             self.tableView?.endUpdates()
             self.view.layoutIfNeeded()
-
         } )
         CATransaction.commit()
     }
@@ -138,6 +174,10 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
         return data.count
     }
     
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 50.0
+    }
+    
     // MARK: TABLEVIEW DELEGATE
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -146,12 +186,12 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             print("Selected Cell Index Doesn't exist in table")
             return
         }
-        guard let coverImage = tableView.createTableCellSnapshot(cell: cell) else {
+        guard let coverImage = cell.contentView.positionedSnapshot(snapshotSuperView: view) else {
             print("Snapshot Failed")
             return
         }
         coverImage.layer.cornerRadius = 5.0
-        coverImage.clipsToBounds = true
+        //coverImage.clipsToBounds = true
         
         CATransaction.begin()
         CATransaction.setCompletionBlock {
@@ -168,8 +208,12 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
         }
         // Initial Animation
         UIView.animate(withDuration: 0.3, animations: {
-            coverImage.transform = coverImage.transform.scaledBy(x: 1.1, y: 1)
-            coverImage.layer.zPosition = 100.0
+            coverImage.transform = coverImage.transform.scaledBy(x: 1.05, y: 1)
+            coverImage.layer.zPosition = 1.0
+            coverImage.layer.shadowOffset = CGSize(width: 1.0, height: 1.0)
+            coverImage.layer.shadowRadius = 5.0
+            coverImage.layer.shadowOpacity = 0.25
+            coverImage.layer.shadowColor = UIColor.black.cgColor
             
         })
         CATransaction.commit()
@@ -177,31 +221,22 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
 }
 
-extension UITableView {
+extension UIView {
     
-    func createTableCellSnapshot(cell:UITableViewCell) -> UIView? {
-        // Create a rastered image of a view and match its position
-        
-        // We need the table view to be attached to a view heirachy
-        // So we can position the snapshot correctly
-        guard
-            let cellSuperView = cell.superview,
-            let tableSuperView = superview
-        else {
+    func positionedSnapshot(snapshotSuperView:UIView) -> UIView? {
+
+        guard let parent = superview else {
             return nil
         }
-        
-        // Better to animate Snap shot View ala Transition rather than mess with table cells
-        guard let coverImage = cell.contentView.resizableSnapshotView(from: cell.bounds, afterScreenUpdates: true, withCapInsets: .zero) else {
-            
+        guard let coverImage = resizableSnapshotView(from: bounds, afterScreenUpdates: true, withCapInsets: .zero) else {
             print("Snapshot Failed")
             return nil
         }
-
-        tableSuperView.addSubview(coverImage)
-        coverImage.frame = cellSuperView.convert(cell.frame, to: tableSuperView)
+        snapshotSuperView.addSubview(coverImage)
+        coverImage.frame = parent.convert(frame, to: snapshotSuperView)
         return coverImage
         
     }
     
 }
+
