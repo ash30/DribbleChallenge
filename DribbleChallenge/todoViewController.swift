@@ -9,18 +9,24 @@
 import Foundation
 import UIKit
 
-class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UITextFieldDelegate{
+
+class TodoViewController: UIViewController{
     
     // MARK: PROPERTIES
     
+    var defaultRowHeight = 50.0
+    
+    lazy var data: OrderedDataSource = {
+        let data = TodoDataSource(items: Array(0...10).map{"Todo \($0)"})
+        data.observer = self
+        return data
+    }()
+    
     var tableView: UITableView!
-    var data = Array(0...10)
     
-    var headerHeight = 50.0
+    var header: TodoTableSectionView!
     
-    var header: TodoTableSectionView?
-    
-    private var containingView:UIStackView?
+    private var containingView:UIStackView!
     
     private lazy var headerTransitionView:UIView? = {
         guard
@@ -31,7 +37,6 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             return nil
         }
         return view
-        
     }()
     
     
@@ -40,7 +45,6 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
     override func viewDidLoad() {
         
         containingView = {
-            
             // Create parent view for styling
             let view = UIView()
             view.layer.cornerRadius = 4.0
@@ -79,7 +83,6 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             let view = TodoTableSectionView()
             view.backgroundColor = UIColor.blue
             view.textfield.delegate = self
-            view.addButton.addTarget(self, action: #selector(createRow), for: .touchDown)
             let constraints = [
                 view.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
             ]
@@ -103,51 +106,66 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
     override func viewDidAppear(_ animated: Bool) {
         // We create this here because snapshot needs views displayed
-        // but we need it finished before any user interaction
+        // but we need it finished before any user interaction\
         headerTransitionView?.isHidden = true
         headerTransitionView?.center.y += 50
         
     }
+
+    // MARK: ANIMATION
     
-    // MARK: ROW CREATION
-    @objc func createRow(){
+    func animatedHeaderFocus(){
         
-        let firstIndex = IndexPath(item: 0, section: 0)
+        for constraint in (header?.constraintsAffectingLayout(for: .vertical).filter { $0.firstAttribute == .height } ?? []) {
+            constraint.constant = CGFloat(defaultRowHeight * 1.5)
+        }
+        
+        CATransaction.begin()
+        UIView.animate(withDuration: 0.3, animations: {
+            self.tableView?.beginUpdates()
+            self.tableView?.endUpdates()
+            self.view.layoutIfNeeded()
+            
+        } )
+        CATransaction.commit()
+        
+    }
+    
+    
+    func animatedCreateRow(indexPath: IndexPath){
         
         guard let coverImage = header?.contentView.positionedSnapshot(snapshotSuperView:self.view) else {
             return
         }
-        guard let initialCell = tableView.cellForRow(at: firstIndex) else {
-            return
+        for constraint in (header?.constraintsAffectingLayout(for: .vertical).filter { $0.firstAttribute == .height } ?? []) {
+            constraint.constant = CGFloat(defaultRowHeight)
         }
-        
-        let heightConstraints = header?.constraintsAffectingLayout(for: .vertical).filter { $0.firstAttribute == .height } ?? []
-        heightConstraints.map { $0.constant = 50 }
         
         header?.contentView.isHidden = true
         
         CATransaction.begin()
-
         UIView.animate(withDuration: 0.5, animations: {
+            
+            // MARK: MOVE ALL ROWS DOWN
 
-            
-            self.data.insert(0, at: 0)
-            
             self.tableView?.beginUpdates()
-            self.tableView.insertRows(at: [firstIndex], with: .top)
+            self.tableView.insertRows(at: [indexPath], with: .top)
             self.tableView?.endUpdates()
-            let newCell = self.tableView.cellForRow(at: firstIndex)
-            newCell?.isHidden = true
+            let newlyInserted = self.tableView.cellForRow(at: indexPath)
+            newlyInserted?.isHidden = true
             self.view.layoutIfNeeded()
             
+            //FIXME: get rid of magic number
             coverImage.transform = coverImage.transform.translatedBy(x: 0, y: 40.0)
-
-        }){ (Bool) in
-            let newCell = self.tableView.cellForRow(at: firstIndex)
-            newCell?.isHidden = false
+            
+        }){ (Bool) in // global row move completion handler
+            
+            let newlyInserted = self.tableView.cellForRow(at: indexPath)
+            newlyInserted?.isHidden = false
             coverImage.removeFromSuperview()
             
-            // SLIDE UP TRANSITION
+            // MARK: SECONDARY HEADER SLIDE UP TRANSITION
+            // We use explicit layer animation as change is transient
             CATransaction.begin()
             CATransaction.setCompletionBlock {
                 self.header?.contentView.isHidden = false
@@ -160,64 +178,13 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             self.headerTransitionView?.layer.add(animation, forKey: nil)
             CATransaction.commit()
 
-            
         }
         
         CATransaction.commit()
         
-
-        
     }
     
-    // MARK: TEXT DELEGATE 
-    func textFieldDidBeginEditing(_ textField: UITextField){
-
-        let heightConstraints = header?.constraintsAffectingLayout(for: .vertical).filter { $0.firstAttribute == .height } ?? []
-        _ = heightConstraints.map { $0.constant = 75 }
-
-        CATransaction.begin()
-        UIView.animate(withDuration: 0.3, animations: {
-            self.tableView?.beginUpdates()
-            self.tableView?.endUpdates()
-            self.view.layoutIfNeeded()
-
-        } )
-        CATransaction.commit()
-    }
-
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        createRow()
-
-    }
-    
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.endEditing(true)
-        return true
-    }
-    
-    // MARK: TABLEVIEW
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
-        let cell = UITableViewCell()
-        cell.textLabel?.text = "Test \(data[indexPath.item])"
-        cell.selectionStyle = .none
-        cell.contentView.backgroundColor = UIColor.white
-        return cell
-    }
-    
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return data.count
-    }
-    
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 50.0
-    }
-    
-    // MARK: TABLEVIEW DELEGATE
-
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
+    func animatedRemoveRow(indexPath: IndexPath){
         guard let cell = tableView.cellForRow(at: indexPath) else {
             print("Selected Cell Index Doesn't exist in table")
             return
@@ -227,17 +194,15 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             return
         }
         coverImage.layer.cornerRadius = 5.0
-        //coverImage.clipsToBounds = true
         
         CATransaction.begin()
         CATransaction.setCompletionBlock {
-
+            
             // After focus animation - drop off screen
             cell.isHidden = true
-            self.data.remove(at: indexPath.item)
-            tableView.deleteRows(at:[indexPath], with:.bottom)
+            self.tableView.deleteRows(at:[indexPath], with:.bottom)
             UIView.animate(withDuration: 1.0, animations: {
-                coverImage.transform = coverImage.transform.translatedBy(x: 0, y: tableView.bounds.height)
+                coverImage.transform = coverImage.transform.translatedBy(x: 0, y: self.tableView.bounds.height)
             }){ (Bool) in
                 coverImage.removeFromSuperview()
             }
@@ -253,6 +218,72 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             
         })
         CATransaction.commit()
+    }
+    
+}
+
+extension TodoViewController: UITextFieldDelegate {
+    
+    // MARK: TEXT DELEGATE
+    func textFieldDidBeginEditing(_ textField: UITextField){
+        animatedHeaderFocus()
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        guard let text = textField.text else {
+            return
+        }
+        data.insert(at: 0, item: text)
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.endEditing(true)
+        return true
+    }
+
+}
+
+extension TodoViewController: UITableViewDataSource, UITableViewDelegate {
+    
+    // MARK: DATA SOURCE
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        let cell = UITableViewCell()
+        let todoItem = data.getItem(at: indexPath.item)
+        cell.textLabel?.text = "Test \(todoItem ?? "NIL")"
+        cell.selectionStyle = .none
+        cell.contentView.backgroundColor = UIColor.white
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return data.count
+    }
+    
+    // MARK: TABLEVIEW DELEGATE
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 50.0
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        _ = data.pop(at: indexPath.item)
+    }
+}
+
+extension TodoViewController: DataSourceObserver {
+    
+    func didUpdate(dataSource: OrderedDataSource, change:DataSourceChanges) {
+        
+        switch change {
+        case .insert(let n):
+            assert(n == 0) // Todo list should also insert at index 0
+            animatedCreateRow(indexPath: IndexPath(item: 0, section: 0))
+        case .removed(let n):
+            animatedRemoveRow(indexPath: IndexPath(item: n, section: 0))
+        }
+        
     }
     
 }

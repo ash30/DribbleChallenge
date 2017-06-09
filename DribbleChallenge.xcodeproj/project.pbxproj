@@ -15,6 +15,7 @@
 		083011CA1E7B5262003BE44D /* DialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 083011C91E7B5262003BE44D /* DialView.swift */; };
 		086E91231EC1ADF000599101 /* UserPin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086E91221EC1ADF000599101 /* UserPin.swift */; };
 		086E91251EC26F3C00599101 /* todoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086E91241EC26F3C00599101 /* todoViewController.swift */; };
+		089334A11EEB4357002CAD59 /* TodoDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 089334A01EEB4357002CAD59 /* TodoDataSource.swift */; };
 		08C990761E93004F00335A58 /* GradientUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08C990751E93004F00335A58 /* GradientUtils.swift */; };
 		08D2C6BC1EE2C9FD006131C7 /* TodoTableSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08D2C6BB1EE2C9FC006131C7 /* TodoTableSectionHeader.swift */; };
 		08F5EA181E92EF60005E4DF8 /* CircularView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08F5EA171E92EF60005E4DF8 /* CircularView.swift */; };
@@ -35,6 +36,7 @@
 		083011C91E7B5262003BE44D /* DialView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DialView.swift; sourceTree = "<group>"; };
 		086E91221EC1ADF000599101 /* UserPin.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserPin.swift; sourceTree = "<group>"; };
 		086E91241EC26F3C00599101 /* todoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = todoViewController.swift; path = DribbleChallenge/todoViewController.swift; sourceTree = "<group>"; };
+		089334A01EEB4357002CAD59 /* TodoDataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TodoDataSource.swift; path = DribbleChallenge/TodoDataSource.swift; sourceTree = "<group>"; };
 		08C990751E93004F00335A58 /* GradientUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GradientUtils.swift; sourceTree = "<group>"; };
 		08D2C6BB1EE2C9FC006131C7 /* TodoTableSectionHeader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TodoTableSectionHeader.swift; sourceTree = "<group>"; };
 		08F5EA171E92EF60005E4DF8 /* CircularView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CircularView.swift; sourceTree = "<group>"; };
@@ -59,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				086E91241EC26F3C00599101 /* todoViewController.swift */,
+				089334A01EEB4357002CAD59 /* TodoDataSource.swift */,
 				08D2C6BB1EE2C9FC006131C7 /* TodoTableSectionHeader.swift */,
 				083011B61E7B51FD003BE44D /* DribbleChallenge */,
 				083011B51E7B51FD003BE44D /* Products */,
@@ -210,6 +213,7 @@
 				08F5EA1D1E92F5D4005E4DF8 /* ResizingView.swift in Sources */,
 				083011CA1E7B5262003BE44D /* DialView.swift in Sources */,
 				086E91231EC1ADF000599101 /* UserPin.swift in Sources */,
+				089334A11EEB4357002CAD59 /* TodoDataSource.swift in Sources */,
 				083011B81E7B51FD003BE44D /* AppDelegate.swift in Sources */,
 				086E91251EC26F3C00599101 /* todoViewController.swift in Sources */,
 			);
