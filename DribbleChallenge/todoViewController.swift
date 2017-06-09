@@ -11,19 +11,27 @@ import UIKit
 
 class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UITextFieldDelegate{
     
+    // MARK: PROPERTIES
+    
     var tableView: UITableView!
     var data = Array(0...10)
     
     var headerHeight = 50.0
     
-    var header: TodoTableSectionView?
+    var header: UIView?
     var constraints: [NSLayoutConstraint] = []
+    
+    // MARK: LIFE CYCLE
     
     override func viewDidLoad() {
         
-        
-        let containingView: UIView = {
+        let containingView: UIStackView = {
+            
+            // Create parent view for styling
             let view = UIView()
+            view.layer.cornerRadius = 4.0
+            view.clipsToBounds = true
+            
             view.translatesAutoresizingMaskIntoConstraints = false
             let constraints = [
                 view.topAnchor.constraint(equalTo: self.view.layoutMarginsGuide.topAnchor, constant:35),
@@ -33,101 +41,80 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             ]
             self.view.addSubview(view)
             NSLayoutConstraint.activate(constraints)
+            
+            let stack = UIStackView()
+            view.addSubview(stack)
+            stack.distribution = .fill
+            stack.alignment = .fill
+            stack.axis = .vertical
+            
+            stack.translatesAutoresizingMaskIntoConstraints = false
+            let stackConstraints = [
+                stack.topAnchor.constraint(equalTo: view.topAnchor),
+                stack.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+                stack.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                stack.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+            ]
+            view.addSubview(stack)
+            NSLayoutConstraint.activate(stackConstraints)
+            
+            return stack
+        }()
+        
+        header = { () -> UIView in
+            let view = TodoTableSectionView()
+            view.backgroundColor = UIColor.blue
+            view.textfield.delegate = self
+            containingView.addArrangedSubview(view)
             return view
         }()
         
+        
         tableView = {
             let view = UITableView()
-            view.translatesAutoresizingMaskIntoConstraints = false
-            let constraints = [
-                view.topAnchor.constraint(equalTo: containingView.layoutMarginsGuide.topAnchor),
-                view.bottomAnchor.constraint(equalTo: containingView.layoutMarginsGuide.bottomAnchor),
-                view.leadingAnchor.constraint(equalTo: containingView.layoutMarginsGuide.leadingAnchor),
-                view.trailingAnchor.constraint(equalTo: containingView.layoutMarginsGuide.trailingAnchor)
-            ]
-            
-            containingView.addSubview(view)
-            NSLayoutConstraint.activate(constraints)
+            containingView.addArrangedSubview(view)
             view.dataSource = self
             view.delegate = self
             return view
         }()
         
+
+        // Display Preferences
         view.backgroundColor = UIColor.red
         tableView.backgroundColor = UIColor.blue
-        tableView.clipsToBounds = false
-        
     }
+    
     
     // MARK: TEXT DELEGATE 
     func textFieldDidBeginEditing(_ textField: UITextField){
-        self.headerHeight = 100
-        constraints[0].constant = 100
+
+        let heightConstraints = header?.constraintsAffectingLayout(for: .vertical).filter { $0.firstAttribute == .height } ?? []
+        
+        heightConstraints.map { $0.constant = 100 }
 
         CATransaction.begin()
-        CATransaction.setCompletionBlock {
-            
-            print("test \(self.header?.frame)")
-            //self.tableView?.beginUpdates()
-            //self.tableView?.endUpdates()
-
-
-        }
-        
-
         UIView.animate(withDuration: 0.3, animations: {
             self.tableView?.beginUpdates()
             self.tableView?.endUpdates()
-            self.tableView.layoutIfNeeded()
+            self.view.layoutIfNeeded()
 
         } )
-        
         CATransaction.commit()
-        
     }
-    /*
- 
-     I think what happens is we're not animating the header view widget height
-     JUST the height the table uses to calculate offset ( which is working! )
-     
-     For some reason this doesn't affect the view widget
-     THEN when we next click on the thing, it jumps to what is was supposed to be
-     
-     EDIT: So we fixed the jumping - we needed to force the constraints to resolve
-     after the height change so they too get implicitly animated
-     
-     Problem persists though:
-     
-        On edit: the frame is updating new header height,
-        on exit: the frame updates to old height, NOT new height
-        On subsequent edits, layout keeps using old height
-     
-    */
-    
+
     func textFieldDidEndEditing(_ textField: UITextField) {
         
 
-        self.headerHeight = 50
-        constraints[0].constant = 50
-        constraints[0].firstAttribute
-
+        let heightConstraints = header?.constraintsAffectingLayout(for: .vertical).filter { $0.firstAttribute == .height } ?? []
+        heightConstraints.map { $0.constant = 50 }
         
         CATransaction.begin()
-        CATransaction.setCompletionBlock {
-            //self.tableView.reloadData()
-            print("test \(self.header?.frame)")
-
-            
-
-        }
         UIView.animate(withDuration: 0.3, animations: {
             self.tableView?.beginUpdates()
             self.tableView?.endUpdates()
-            self.tableView.layoutIfNeeded()
+            self.view.layoutIfNeeded()
 
         } )
-        
-        
         CATransaction.commit()
     }
     
@@ -152,34 +139,6 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
     }
     
     // MARK: TABLEVIEW DELEGATE
-    
-    
-    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        let v = TodoTableSectionView()
-        header = v
-        v.textfield.delegate = self
-        
-        //v.translatesAutoresizingMaskIntoConstraints = false
-        v.autoresizingMask = [
-            .flexibleWidth,
-        ]
-        
-        constraints = [
-            v.heightAnchor.constraint(equalToConstant: CGFloat(headerHeight))
-        ]
-        NSLayoutConstraint.activate(constraints)
-
-        
-        return v
-    }
-    
-
-    
-    func tableView(_ tableView: UITableView, estimatedHeightForHeaderInSection section: Int) -> CGFloat {
-        return CGFloat(headerHeight)
-
-    }
-    
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
@@ -187,38 +146,62 @@ class TodoViewController: UIViewController, UITableViewDataSource, UITableViewDe
             print("Selected Cell Index Doesn't exist in table")
             return
         }
-        
-        guard let coverImage = cell.contentView.resizableSnapshotView(from: cell.bounds, afterScreenUpdates: true, withCapInsets: .zero) else {
-            
+        guard let coverImage = tableView.createTableCellSnapshot(cell: cell) else {
             print("Snapshot Failed")
             return
         }
-        cell.superview!.addSubview(coverImage)
-        coverImage.frame = cell.frame
-        coverImage.layer.zPosition = 100.0
-        cell.contentView.isHidden = true
-
+        coverImage.layer.cornerRadius = 5.0
+        coverImage.clipsToBounds = true
         
         CATransaction.begin()
         CATransaction.setCompletionBlock {
 
+            // After focus animation - drop off screen
+            cell.isHidden = true
             self.data.remove(at: indexPath.item)
             tableView.deleteRows(at:[indexPath], with:.bottom)
-            
             UIView.animate(withDuration: 1.0, animations: {
                 coverImage.transform = coverImage.transform.translatedBy(x: 0, y: tableView.bounds.height)
             }){ (Bool) in
                 coverImage.removeFromSuperview()
             }
         }
-        
+        // Initial Animation
         UIView.animate(withDuration: 0.3, animations: {
             coverImage.transform = coverImage.transform.scaledBy(x: 1.1, y: 1)
+            coverImage.layer.zPosition = 100.0
+            
         })
-                
         CATransaction.commit()
-        
     }
     
+}
+
+extension UITableView {
+    
+    func createTableCellSnapshot(cell:UITableViewCell) -> UIView? {
+        // Create a rastered image of a view and match its position
+        
+        // We need the table view to be attached to a view heirachy
+        // So we can position the snapshot correctly
+        guard
+            let cellSuperView = cell.superview,
+            let tableSuperView = superview
+        else {
+            return nil
+        }
+        
+        // Better to animate Snap shot View ala Transition rather than mess with table cells
+        guard let coverImage = cell.contentView.resizableSnapshotView(from: cell.bounds, afterScreenUpdates: true, withCapInsets: .zero) else {
+            
+            print("Snapshot Failed")
+            return nil
+        }
+
+        tableSuperView.addSubview(coverImage)
+        coverImage.frame = cellSuperView.convert(cell.frame, to: tableSuperView)
+        return coverImage
+        
+    }
     
 }
