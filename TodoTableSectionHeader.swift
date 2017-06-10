@@ -12,6 +12,13 @@ import UIKit
 
 class TodoTableSectionView: UIView {
     
+    enum DisplayState {
+        case inactive
+        case start
+        case submitted
+    }
+    
+    
     // MARK: PROPERTIES
     
     let textfield: UITextField = {
@@ -38,8 +45,26 @@ class TodoTableSectionView: UIView {
         return v
     }()
     
-    let contentView: UIView = UIView()
+    var currentDisplayState: TodoTableSectionView.DisplayState = .inactive {
+        didSet {
+            switch currentDisplayState {
+            case .inactive:
+                self.addButton.isHidden = false
+                self.confirmButton.isHidden = true
+                self.confirmButton.isEnabled = false
+            case .start:
+                self.addButton.isHidden = true
+                self.confirmButton.isHidden = false
+                self.confirmButton.isEnabled = false
+            case .submitted:
+                self.addButton.isHidden = true
+                self.confirmButton.isHidden = true
+                self.confirmButton.isEnabled = true
+            }
+        }
+    }
     
+    let contentView: UIView = UIView()
     var contentViewWidthConstraint : NSLayoutConstraint?
     var contentViewHeightMinimumConstraint: NSLayoutConstraint?
     

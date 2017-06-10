@@ -81,10 +81,6 @@ class TodoViewController: UIViewController{
             let view = TodoTableSectionView()
             view.backgroundColor = UIColor.blue
             view.textfield.delegate = self
-//            let constraints = [
-//                view.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-//            ]
-//            NSLayoutConstraint.activate(constraints)
             containingView!.addArrangedSubview(view)
             return view
         }()
@@ -116,8 +112,7 @@ class TodoViewController: UIViewController{
         
         header.contentViewHeightMinimumConstraint?.constant = CGFloat(defaultRowHeight * 1.5)
         header.contentViewWidthConstraint?.constant = 10.0
-        header.addButton.isHidden = true
-        header.confirmButton.isHidden = false
+        header.currentDisplayState = .start
         
         CATransaction.begin()
         UIView.animate(withDuration: 0.3, animations: {
@@ -130,12 +125,13 @@ class TodoViewController: UIViewController{
         
     }
     
+    // FIXME: Rename this, its basically a pre step for header, hiding additional UI before transition
     func animateFoo(indexPath: IndexPath){
         CATransaction.begin()
         CATransaction.setCompletionBlock {
             self.animatedCreateRow(indexPath: indexPath)
         }
-        header.confirmButton.isHidden = true
+        header.currentDisplayState = .submitted
         CATransaction.commit()
     }
     
@@ -147,9 +143,6 @@ class TodoViewController: UIViewController{
         }
         header.contentViewHeightMinimumConstraint?.constant = CGFloat(defaultRowHeight)
         header.contentViewWidthConstraint?.constant = 0
-        header.addButton.isHidden = false
-
-        
         header?.contentView.isHidden = true
         
         CATransaction.begin()
@@ -163,6 +156,7 @@ class TodoViewController: UIViewController{
             // We use explicit layer animation as change is transient
             CATransaction.begin()
             CATransaction.setCompletionBlock {
+                self.header.currentDisplayState = .inactive
                 self.header?.contentView.isHidden = false
                 self.headerTransitionView?.isHidden = true
             }
@@ -248,15 +242,12 @@ extension TodoViewController: UITextFieldDelegate {
         }
         data.insert(at: 0, item: text)
         textField.text = ""
-    
-
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.endEditing(true)
         return true
     }
-
 }
 
 extension TodoViewController: UITableViewDataSource, UITableViewDelegate {
