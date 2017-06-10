@@ -47,8 +47,6 @@ class TodoViewController: UIViewController{
         containingView = {
             // Create parent view for styling
             let view = UIView()
-            view.layer.cornerRadius = 4.0
-            view.clipsToBounds = true
             
             view.translatesAutoresizingMaskIntoConstraints = false
             let constraints = [
@@ -83,10 +81,10 @@ class TodoViewController: UIViewController{
             let view = TodoTableSectionView()
             view.backgroundColor = UIColor.blue
             view.textfield.delegate = self
-            let constraints = [
-                view.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-            ]
-            NSLayoutConstraint.activate(constraints)
+//            let constraints = [
+//                view.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+//            ]
+//            NSLayoutConstraint.activate(constraints)
             containingView!.addArrangedSubview(view)
             return view
         }()
@@ -116,9 +114,10 @@ class TodoViewController: UIViewController{
     
     func animatedHeaderFocus(){
         
-        for constraint in (header?.constraintsAffectingLayout(for: .vertical).filter { $0.firstAttribute == .height } ?? []) {
-            constraint.constant = CGFloat(defaultRowHeight * 1.5)
-        }
+        header.contentViewHeightMinimumConstraint?.constant = CGFloat(defaultRowHeight * 1.5)
+        header.contentViewWidthConstraint?.constant = 10.0
+        header.addButton.isHidden = true
+        header.confirmButton.isHidden = false
         
         CATransaction.begin()
         UIView.animate(withDuration: 0.3, animations: {
@@ -131,35 +130,31 @@ class TodoViewController: UIViewController{
         
     }
     
+    func animateFoo(indexPath: IndexPath){
+        CATransaction.begin()
+        CATransaction.setCompletionBlock {
+            self.animatedCreateRow(indexPath: indexPath)
+        }
+        header.confirmButton.isHidden = true
+        CATransaction.commit()
+    }
+    
     
     func animatedCreateRow(indexPath: IndexPath){
-        
+      
         guard let coverImage = header?.contentView.positionedSnapshot(snapshotSuperView:self.view) else {
             return
         }
-        for constraint in (header?.constraintsAffectingLayout(for: .vertical).filter { $0.firstAttribute == .height } ?? []) {
-            constraint.constant = CGFloat(defaultRowHeight)
-        }
+        header.contentViewHeightMinimumConstraint?.constant = CGFloat(defaultRowHeight)
+        header.contentViewWidthConstraint?.constant = 0
+        header.addButton.isHidden = false
+
         
         header?.contentView.isHidden = true
         
         CATransaction.begin()
-        UIView.animate(withDuration: 0.5, animations: {
-            
-            // MARK: MOVE ALL ROWS DOWN
-
-            self.tableView?.beginUpdates()
-            self.tableView.insertRows(at: [indexPath], with: .top)
-            self.tableView?.endUpdates()
-            let newlyInserted = self.tableView.cellForRow(at: indexPath)
-            newlyInserted?.isHidden = true
-            self.view.layoutIfNeeded()
-            
-            //FIXME: get rid of magic number
-            coverImage.transform = coverImage.transform.translatedBy(x: 0, y: 40.0)
-            
-        }){ (Bool) in // global row move completion handler
-            
+        
+        CATransaction.setCompletionBlock {
             let newlyInserted = self.tableView.cellForRow(at: indexPath)
             newlyInserted?.isHidden = false
             coverImage.removeFromSuperview()
@@ -179,6 +174,24 @@ class TodoViewController: UIViewController{
             CATransaction.commit()
 
         }
+        
+        
+        UIView.animate(withDuration: 0.5, animations: {
+            
+            // MARK: MOVE ALL ROWS DOWN
+
+            self.tableView?.beginUpdates()
+            self.tableView.insertRows(at: [indexPath], with: .top)
+            self.tableView?.endUpdates()
+            let newlyInserted = self.tableView.cellForRow(at: indexPath)
+            newlyInserted?.isHidden = true
+            self.view.layoutIfNeeded()
+            
+            //FIXME: get rid of magic number
+            coverImage.transform = coverImage.transform.translatedBy(x: 0, y: 40.0)
+            coverImage.transform = coverImage.transform.scaledBy(x: 0.97, y: 1)
+            
+        })
         
         CATransaction.commit()
         
@@ -234,6 +247,9 @@ extension TodoViewController: UITextFieldDelegate {
             return
         }
         data.insert(at: 0, item: text)
+        textField.text = ""
+    
+
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -251,7 +267,7 @@ extension TodoViewController: UITableViewDataSource, UITableViewDelegate {
         
         let cell = UITableViewCell()
         let todoItem = data.getItem(at: indexPath.item)
-        cell.textLabel?.text = "Test \(todoItem ?? "NIL")"
+        cell.textLabel?.text = "\(todoItem ?? "NIL")"
         cell.selectionStyle = .none
         cell.contentView.backgroundColor = UIColor.white
         return cell
@@ -279,7 +295,7 @@ extension TodoViewController: DataSourceObserver {
         switch change {
         case .insert(let n):
             assert(n == 0) // Todo list should also insert at index 0
-            animatedCreateRow(indexPath: IndexPath(item: 0, section: 0))
+            animateFoo(indexPath: IndexPath(item: 0, section: 0))
         case .removed(let n):
             animatedRemoveRow(indexPath: IndexPath(item: n, section: 0))
         }

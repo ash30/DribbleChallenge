@@ -12,6 +12,8 @@ import UIKit
 
 class TodoTableSectionView: UIView {
     
+    // MARK: PROPERTIES
+    
     let textfield: UITextField = {
         let v = UITextField()
         v.placeholder = "Add New Goal"
@@ -27,7 +29,21 @@ class TodoTableSectionView: UIView {
         return v
     }()
     
+    let confirmButton:UIButton = {
+        let v = UIButton()
+        v.setTitle("add", for: .normal)
+        v.setContentHuggingPriority(750, for: .horizontal)
+        v.setTitleColor(UIColor.black, for: .normal)
+        v.isHidden = true
+        return v
+    }()
+    
     let contentView: UIView = UIView()
+    
+    var contentViewWidthConstraint : NSLayoutConstraint?
+    var contentViewHeightMinimumConstraint: NSLayoutConstraint?
+    
+    // MARK: METHODS
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -45,23 +61,29 @@ class TodoTableSectionView: UIView {
     
     func createSubviews() {
         
+        contentViewHeightMinimumConstraint = heightAnchor.constraint(greaterThanOrEqualToConstant: 50.0)
+        NSLayoutConstraint.activate([contentViewHeightMinimumConstraint!])
+        
         let parentView: UIView = {
             let v = contentView
             v.backgroundColor = UIColor.white
 
             v.translatesAutoresizingMaskIntoConstraints = false
             let constraints = [
-                v.leftAnchor.constraint(equalTo: layoutMarginsGuide.leftAnchor),
-                v.rightAnchor.constraint(equalTo: layoutMarginsGuide.rightAnchor),
-                v.centerYAnchor.constraint(equalTo: centerYAnchor)
+                v.centerYAnchor.constraint(equalTo: centerYAnchor),
+                v.centerXAnchor.constraint(equalTo: centerXAnchor),
+                v.widthAnchor.constraint(equalTo: widthAnchor),
+                v.heightAnchor.constraint(greaterThanOrEqualToConstant: 50.0)
             ]
             self.addSubview(v)
             NSLayoutConstraint.activate(constraints)
+            // Save reference so we can animate later
+            self.contentViewWidthConstraint = constraints[2]
             return v
         }()
         
         let stackView = {
-            let v = UIStackView(arrangedSubviews: [addButton,textfield])
+            let v = UIStackView(arrangedSubviews: [addButton,textfield, confirmButton])
             v.distribution = .fill
             v.alignment = .center
             v.axis = .horizontal
@@ -76,9 +98,8 @@ class TodoTableSectionView: UIView {
             parentView.addSubview(v)
             NSLayoutConstraint.activate(constraints)
         }()
-        
-       
-        
     }
+    
+    
     
 }
