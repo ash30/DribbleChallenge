@@ -9,8 +9,8 @@
 import Foundation
 import UIKit
 
-
 class TodoViewController: UIViewController{
+
     
     // MARK: PROPERTIES
     
@@ -22,13 +22,19 @@ class TodoViewController: UIViewController{
         return data
     }()
     
+    lazy var animator: TodoViewControllerAnimator = {
+        let controller = TodoViewControllerAnimator()
+        controller.viewController = self
+        return controller
+    }()
+    
     var tableView: UITableView!
     
     var header: TodoTableSectionView!
     
     private var containingView:UIStackView!
     
-    private lazy var headerTransitionView:UIView? = {
+    lazy var headerTransitionView:UIView? = {
         guard
             let header = self.header,
             let containingView = self.containingView,
@@ -105,125 +111,14 @@ class TodoViewController: UIViewController{
         headerTransitionView?.center.y += 50
         
     }
-
-    // MARK: ANIMATION
-    
-    func animatedHeaderFocus(){
-        
-        header.contentViewHeightMinimumConstraint?.constant = CGFloat(defaultRowHeight * 1.5)
-        header.contentViewWidthConstraint?.constant = 10.0
-        header.currentDisplayState = .start
-        
-        CATransaction.begin()
-        UIView.animate(withDuration: 0.3, animations: {
-            self.tableView?.beginUpdates()
-            self.tableView?.endUpdates()
-            self.view.layoutIfNeeded()
-            
-        } )
-        CATransaction.commit()
-        
-    }
     
     // FIXME: Rename this, its basically a pre step for header, hiding additional UI before transition
     func animateFoo(indexPath: IndexPath){
         CATransaction.begin()
         CATransaction.setCompletionBlock {
-            self.animatedCreateRow(indexPath: indexPath)
+            //self.animatedCreateRow(indexPath: indexPath)
         }
         header.currentDisplayState = .submitted
-        CATransaction.commit()
-    }
-    
-    
-    func animatedCreateRow(indexPath: IndexPath){
-      
-        guard let coverImage = header?.contentView.positionedSnapshot(snapshotSuperView:self.view) else {
-            return
-        }
-        header.contentViewHeightMinimumConstraint?.constant = CGFloat(defaultRowHeight)
-        header.contentViewWidthConstraint?.constant = 0
-        header?.contentView.isHidden = true
-        
-        CATransaction.begin()
-        
-        CATransaction.setCompletionBlock {
-            let newlyInserted = self.tableView.cellForRow(at: indexPath)
-            newlyInserted?.isHidden = false
-            coverImage.removeFromSuperview()
-            
-            // MARK: SECONDARY HEADER SLIDE UP TRANSITION
-            // We use explicit layer animation as change is transient
-            CATransaction.begin()
-            CATransaction.setCompletionBlock {
-                self.header.currentDisplayState = .inactive
-                self.header?.contentView.isHidden = false
-                self.headerTransitionView?.isHidden = true
-            }
-            self.headerTransitionView?.isHidden = false
-            let animation = CABasicAnimation(keyPath: #keyPath(CALayer.position))
-            animation.byValue = CGPoint(x: 0, y: -50)
-            animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseIn)
-            self.headerTransitionView?.layer.add(animation, forKey: nil)
-            CATransaction.commit()
-
-        }
-        
-        
-        UIView.animate(withDuration: 0.5, animations: {
-            
-            // MARK: MOVE ALL ROWS DOWN
-
-            self.tableView?.beginUpdates()
-            self.tableView.insertRows(at: [indexPath], with: .top)
-            self.tableView?.endUpdates()
-            let newlyInserted = self.tableView.cellForRow(at: indexPath)
-            newlyInserted?.isHidden = true
-            self.view.layoutIfNeeded()
-            
-            //FIXME: get rid of magic number
-            coverImage.transform = coverImage.transform.translatedBy(x: 0, y: 40.0)
-            coverImage.transform = coverImage.transform.scaledBy(x: 0.97, y: 1)
-            
-        })
-        
-        CATransaction.commit()
-        
-    }
-    
-    func animatedRemoveRow(indexPath: IndexPath){
-        guard let cell = tableView.cellForRow(at: indexPath) else {
-            print("Selected Cell Index Doesn't exist in table")
-            return
-        }
-        guard let coverImage = cell.contentView.positionedSnapshot(snapshotSuperView: view) else {
-            print("Snapshot Failed")
-            return
-        }
-        coverImage.layer.cornerRadius = 5.0
-        
-        CATransaction.begin()
-        CATransaction.setCompletionBlock {
-            
-            // After focus animation - drop off screen
-            cell.isHidden = true
-            self.tableView.deleteRows(at:[indexPath], with:.bottom)
-            UIView.animate(withDuration: 1.0, animations: {
-                coverImage.transform = coverImage.transform.translatedBy(x: 0, y: self.tableView.bounds.height)
-            }){ (Bool) in
-                coverImage.removeFromSuperview()
-            }
-        }
-        // Initial Animation
-        UIView.animate(withDuration: 0.3, animations: {
-            coverImage.transform = coverImage.transform.scaledBy(x: 1.05, y: 1)
-            coverImage.layer.zPosition = 1.0
-            coverImage.layer.shadowOffset = CGSize(width: 1.0, height: 1.0)
-            coverImage.layer.shadowRadius = 5.0
-            coverImage.layer.shadowOpacity = 0.25
-            coverImage.layer.shadowColor = UIColor.black.cgColor
-            
-        })
         CATransaction.commit()
     }
     
@@ -233,7 +128,7 @@ extension TodoViewController: UITextFieldDelegate {
     
     // MARK: TEXT DELEGATE
     func textFieldDidBeginEditing(_ textField: UITextField){
-        animatedHeaderFocus()
+        animator.animatedHeaderFocus()
     }
     
     func textFieldDidEndEditing(_ textField: UITextField) {
@@ -286,9 +181,9 @@ extension TodoViewController: DataSourceObserver {
         switch change {
         case .insert(let n):
             assert(n == 0) // Todo list should also insert at index 0
-            animateFoo(indexPath: IndexPath(item: 0, section: 0))
+            animator.animatedCreateRow(indexPath: IndexPath(item: 0, section: 0))
         case .removed(let n):
-            animatedRemoveRow(indexPath: IndexPath(item: n, section: 0))
+            animator.animatedRemoveRow(indexPath: IndexPath(item: n, section: 0))
         }
         
     }
